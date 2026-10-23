@@ -1,0 +1,6 @@
+{
+  "name": "FP GlassHelper",
+  "description": "Автоматизация FunPay: автоподнятие лотов, умный автоответчик, авто-тикеты в ТП, уведомления в Telegram и режим 24/7 сервера для старого смартфона в светлом стеклянном дизайне.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

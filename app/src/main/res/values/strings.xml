@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">FP GlassHelper</string>
+    <string name="nav_dashboard">Дашборд</string>
+    <string name="nav_lots">Лоты</string>
+    <string name="nav_auto_reply">Автоответ</string>
+    <string name="nav_orders_tp">Заказы и ТП</string>
+    <string name="nav_server">Сервер 24/7</string>
+    <string name="notification_channel_name">Фоновый сервер FunPay 24/7</string>
+    <string name="notification_channel_desc">Поддерживает работу сессии поднятия лотов, проверки заказов и Telegram уведомлений</string>
+</resources>
