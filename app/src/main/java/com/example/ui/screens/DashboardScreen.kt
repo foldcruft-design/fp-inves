@@ -21,23 +21,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.filled.SupportAgent
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -57,6 +53,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.AutomationSettingsEntity
@@ -67,8 +64,8 @@ import com.example.ui.components.DarkMetricTile
 import com.example.ui.components.DarkNeonGlassCard
 import com.example.ui.components.DarkNeonStatusBadge
 import com.example.ui.components.GoogleLogoIcon
+import com.example.ui.components.PureGlassButton
 import com.example.ui.theme.DarkBorder
-import com.example.ui.theme.GoogleBlue
 import com.example.ui.theme.JetBrainsMonoFontFamily
 import com.example.ui.theme.NeonAmber
 import com.example.ui.theme.NeonCoral
@@ -100,7 +97,7 @@ fun DashboardScreen(
     var usernameInput by remember { mutableStateOf("") }
     var goldenKeyInput by remember { mutableStateOf("") }
     var userAgentInput by remember {
-        mutableStateOf("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+        mutableStateOf("Mozilla/5.0 (Linux; Android 14; Mobile) Chrome/131.0.0.0")
     }
 
     val activeAccount = accounts.firstOrNull { it.isActive } ?: accounts.firstOrNull()
@@ -111,7 +108,7 @@ fun DashboardScreen(
     }
 
     val powerScale by animateFloatAsState(
-        targetValue = if (settings.isSessionLoopRunning) 1.05f else 1f,
+        targetValue = if (settings.isSessionLoopRunning) 1.04f else 1f,
         label = "power_btn_scale"
     )
 
@@ -119,14 +116,14 @@ fun DashboardScreen(
         modifier = Modifier
             .fillMaxSize()
             .testTag("dashboard_list"),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(11.dp)
     ) {
-        // 1. Neon Cyber Hero Status Card
+        // 1. Sleek Dark Frosted Glass Hero Status Card
         item {
             DarkNeonGlassCard(
                 elevated = true,
-                accentBorderColor = if (settings.isSessionLoopRunning) NeonEmerald else NeonCyan
+                accentBorderColor = if (settings.isSessionLoopRunning) NeonEmerald else null
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -136,41 +133,44 @@ fun DashboardScreen(
                     Column(modifier = Modifier.weight(1f)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             DarkNeonStatusBadge(
-                                text = if (settings.isSessionLoopRunning) "СЕССИЯ 24/7 АКТИВНА" else "СЕССИЯ ОСТАНОВЛЕНА",
-                                color = if (settings.isSessionLoopRunning) NeonEmerald else TextDim
+                                text = if (settings.isSessionLoopRunning) "СЕССИЯ 24/7 АКТИВНА" else "СЕССИЯ ГОТОВА",
+                                color = if (settings.isSessionLoopRunning) NeonEmerald else NeonCyan
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             DarkNeonStatusBadge(
-                                text = "БЕЗ ЛИМИТОВ (PRO)",
-                                color = NeonCyan
+                                text = "БЕЗ ЛИМИТОВ",
+                                color = TextLight
                             )
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "FunPay Tools Pro",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
+                            text = "FP GlassHelper",
+                            style = MaterialTheme.typography.headlineLarge,
                             color = TextWhite
                         )
                         Text(
-                            text = "Автоподнятие лотов • Автоответчик • Автотикеты в ТП (>24ч) • Сессии устройств",
+                            text = "Автоподъем лотов • Автоответ • Автотикеты в ТП (>24ч)",
                             style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                             color = TextLight
                         )
                     }
 
-                    // Futuristic Cyber Power Button
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // Compact Glass Power Button
                     Box(
                         modifier = Modifier
                             .scale(powerScale)
-                            .size(56.dp)
+                            .size(46.dp)
                             .clip(CircleShape)
                             .background(
-                                brush = Brush.linearGradient(
+                                brush = Brush.verticalGradient(
                                     colors = if (settings.isSessionLoopRunning) {
-                                        listOf(NeonEmerald, Color(0xFF047857))
+                                        listOf(Color(0x3834D399), Color(0x1A34D399))
                                     } else {
-                                        listOf(NeonCyan, Color(0xFF0284C7))
+                                        listOf(Color(0x2EFFFFFF), Color(0x14FFFFFF))
                                     }
                                 )
                             )
@@ -180,31 +180,31 @@ fun DashboardScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.PowerSettingsNew,
-                            contentDescription = "Питание сессии",
-                            tint = Color.Black,
-                            modifier = Modifier.size(28.dp)
+                            contentDescription = "Запуск сессии 24/7",
+                            tint = if (settings.isSessionLoopRunning) NeonEmerald else TextWhite,
+                            modifier = Modifier.size(22.dp)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(11.dp))
 
-                // 3 Cyber Metric Tiles
+                // 3 Compact Frosted Metric Tiles
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     DarkMetricTile(
-                        title = "Баланс FunPay",
+                        title = "Баланс",
                         value = if (activeAccount != null) "${activeAccount.balanceRub.toInt()} ₽" else "15 800 ₽",
-                        subtitle = activeAccount?.username ?: "Google Аккаунт",
-                        accentColor = NeonCyan,
+                        subtitle = activeAccount?.username ?: "Сессия",
+                        accentColor = TextWhite,
                         modifier = Modifier.weight(1f)
                     )
                     DarkMetricTile(
-                        title = "Поднятий лотов",
+                        title = "Поднятий",
                         value = "$totalRaises",
-                        subtitle = "${lotCategories.count { it.isAutoRaiseEnabled }} категорий",
+                        subtitle = "${lotCategories.count { it.isAutoRaiseEnabled }} разд.",
                         accentColor = NeonEmerald,
                         modifier = Modifier.weight(1f)
                     )
@@ -217,184 +217,156 @@ fun DashboardScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                // Action Buttons
+                // 2 Pure Glass Quick Action Buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Button(
+                    PureGlassButton(
                         onClick = onRaiseAllNow,
                         enabled = !isBusy,
+                        accentTint = NeonCyan,
                         modifier = Modifier
                             .weight(1f)
-                            .height(48.dp)
-                            .testTag("quick_raise_all_button"),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = NeonCyan,
-                            contentColor = Color.Black
-                        )
+                            .testTag("quick_raise_all_button")
                     ) {
-                        Icon(imageVector = Icons.Default.RocketLaunch, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Поднять лоты", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Icon(
+                            imageVector = Icons.Default.RocketLaunch,
+                            contentDescription = null,
+                            tint = NeonCyan,
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text(
+                            text = "Поднять лоты",
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            color = TextWhite
+                        )
                     }
 
-                    OutlinedButton(
+                    PureGlassButton(
                         onClick = onScanOverdueOrdersNow,
                         enabled = !isBusy,
+                        accentTint = NeonAmber,
                         modifier = Modifier
                             .weight(1f)
-                            .height(48.dp)
-                            .testTag("quick_scan_tp_button"),
-                        shape = RoundedCornerShape(14.dp),
-                        border = BorderStroke(1.dp, NeonAmber)
+                            .testTag("quick_scan_tp_button")
                     ) {
-                        Icon(imageVector = Icons.Default.SupportAgent, contentDescription = null, tint = NeonAmber, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Тикеты в ТП", color = NeonAmber, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Icon(
+                            imageVector = Icons.Default.SupportAgent,
+                            contentDescription = null,
+                            tint = NeonAmber,
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text(
+                            text = "Тикеты в ТП",
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            color = TextWhite
+                        )
                     }
                 }
             }
         }
 
-        // 2. Google Registration & FunPay Login in App (WebView Interceptor)
+        // 2. Account & Session Card with Pure Glass "Добавить аккаунт" Button at the bottom
         item {
-            DarkNeonGlassCard(accentBorderColor = GoogleBlue) {
+            DarkNeonGlassCard {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        GoogleLogoIcon(modifier = Modifier.size(24.dp))
-                        Spacer(modifier = Modifier.width(10.dp))
+                        GoogleLogoIcon()
+                        Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = "Вход и Регистрация на FunPay через Google",
+                                text = "Аккаунт и Сессия FunPay",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
                                 color = TextWhite
                             )
                             Text(
-                                text = "Переход на страницу регистрации FunPay с авто-захватом сессии",
+                                text = "Вход через Google / сайт FunPay с авто-запуском сессии",
                                 style = MaterialTheme.typography.bodyMedium,
-                                fontSize = 12.sp,
+                                fontSize = 11.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                                 color = TextLight
                             )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Primary Registration / Login Button via Webview
-                Button(
-                    onClick = {
-                        // Open built-in browser directed to FunPay registration / Google login
-                        onOpenFunPayWebAuth("https://funpay.com/account/login")
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .testTag("google_login_webview_button"),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF1E293B),
-                        contentColor = TextWhite
-                    ),
-                    border = BorderStroke(1.2.dp, GoogleBlue)
-                ) {
-                    GoogleLogoIcon(modifier = Modifier.size(22.dp))
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "Войти / Зарегистрироваться на FunPay (через Google)",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = TextWhite,
-                        fontSize = 13.sp
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Direct Registration Link Button
-                OutlinedButton(
-                    onClick = {
-                        onOpenFunPayWebAuth("https://funpay.com/account/register")
-                    },
-                    modifier = Modifier.fillMaxWidth().height(44.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, NeonCyan)
-                ) {
-                    Icon(imageVector = Icons.Default.Language, contentDescription = null, tint = NeonCyan, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Открыть форму регистрации funpay.com/account/register",
-                        color = NeonCyan,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Existing Linked Accounts List
+                // Existing Linked Accounts
                 if (accounts.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(9.dp))
                     accounts.forEach { acc ->
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 4.dp)
-                                .clip(RoundedCornerShape(14.dp))
+                                .padding(vertical = 3.dp)
+                                .clip(RoundedCornerShape(12.dp))
                                 .clickable { onSwitchAccount(acc) },
-                            shape = RoundedCornerShape(14.dp),
-                            color = if (acc.isActive) Color(0xFF0F2338) else Color(0xFF0A0F17),
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (acc.isActive) Color(0x2238BDF8) else Color(0x14FFFFFF),
                             border = BorderStroke(
-                                width = 1.dp,
-                                color = if (acc.isActive) NeonCyan else DarkBorder
+                                width = 0.8.dp,
+                                color = if (acc.isActive) NeonCyan.copy(alpha = 0.5f) else DarkBorder
                             )
                         ) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                                    .padding(horizontal = 11.dp, vertical = 8.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(1f)
+                                ) {
                                     Icon(
                                         imageVector = if (acc.isActive) Icons.Default.CheckCircle else Icons.Default.Person,
                                         contentDescription = null,
                                         tint = if (acc.isActive) NeonEmerald else TextDim,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(17.dp)
                                     )
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    Column {
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             text = "${acc.username} (ID: ${acc.userId})",
                                             style = MaterialTheme.typography.titleMedium,
-                                            fontSize = 14.sp,
+                                            fontSize = 12.5.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
                                             color = TextWhite
                                         )
                                         Text(
-                                            text = "Баланс: ${acc.balanceRub.toInt()} ₽ • ${if (acc.isActive) "Активная сессия" else "Нажмите для выбора"}",
+                                            text = "${acc.balanceRub.toInt()} ₽ • ${if (acc.isActive) "Сессия активна (Онлайн + Лоты)" else "Нажмите для выбора"}",
                                             fontFamily = JetBrainsMonoFontFamily,
-                                            fontSize = 11.sp,
-                                            color = if (acc.isActive) NeonCyan else TextDim
+                                            fontSize = 10.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            color = if (acc.isActive) TextCyan else TextDim
                                         )
                                     }
                                 }
                                 IconButton(
                                     onClick = { onDeleteAccount(acc) },
-                                    modifier = Modifier.size(36.dp)
+                                    modifier = Modifier.size(30.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.DeleteOutline,
                                         contentDescription = "Удалить",
-                                        tint = NeonCoral
+                                        tint = NeonCoral,
+                                        modifier = Modifier.size(16.dp)
                                     )
                                 }
                             }
@@ -402,26 +374,102 @@ fun DashboardScreen(
                     }
                 }
 
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Secondary Row: Open FunPay Register or Quick Google Demo Session
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    PureGlassButton(
+                        onClick = { onOpenFunPayWebAuth("https://funpay.com/account/register") },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Language,
+                            contentDescription = null,
+                            tint = TextLight,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text(
+                            text = "Регистрация",
+                            fontSize = 11.sp,
+                            maxLines = 1,
+                            color = TextLight
+                        )
+                    }
+
+                    PureGlassButton(
+                        onClick = { onLoginGoogleFast("FunPay_Pro_Seller", "seller@gmail.com") },
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("google_login_one_click_button")
+                    ) {
+                        GoogleLogoIcon(modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text(
+                            text = "Google Сессия 1-клик",
+                            fontSize = 11.sp,
+                            maxLines = 1,
+                            color = TextWhite
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Pure Frosted Glass Button at the bottom of the card: "Добавить аккаунт"
+                PureGlassButton(
+                    onClick = {
+                        onOpenFunPayWebAuth("https://funpay.com/account/login")
+                    },
+                    accentTint = NeonCyan,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("google_login_webview_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AddCircleOutline,
+                        contentDescription = null,
+                        tint = TextWhite,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(7.dp))
+                    Text(
+                        text = "Добавить аккаунт (Google / FunPay)",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = TextWhite
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = if (showManualKeyForm) "▲ Скрыть ручной ввод golden_key" else "▼ Или вставить ключ вручную / экспресс-вход",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = TextCyan,
-                    modifier = Modifier.clickable { showManualKeyForm = !showManualKeyForm }
+                    text = if (showManualKeyForm) "▲ Скрыть ввод golden_key" else "▼ Ввести golden_key вручную",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontSize = 10.5.sp,
+                    color = TextDim,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .clickable { showManualKeyForm = !showManualKeyForm }
                 )
 
                 AnimatedVisibility(visible = showManualKeyForm) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 10.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                            .padding(top = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         OutlinedTextField(
                             value = usernameInput,
                             onValueChange = { usernameInput = it },
-                            label = { Text("Ник на FunPay") },
+                            label = { Text("Ник на FunPay", fontSize = 11.sp) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
@@ -433,7 +481,7 @@ fun DashboardScreen(
                         OutlinedTextField(
                             value = goldenKeyInput,
                             onValueChange = { goldenKeyInput = it },
-                            label = { Text("golden_key (cookie)") },
+                            label = { Text("Cookie golden_key", fontSize = 11.sp) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
@@ -442,33 +490,27 @@ fun DashboardScreen(
                                 unfocusedTextColor = TextWhite
                             )
                         )
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedButton(
-                                onClick = { onLoginGoogleFast("Google Trader", "trader@gmail.com") },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp),
-                                border = BorderStroke(1.dp, GoogleBlue)
-                            ) {
-                                Text("Экспресс-вход", fontSize = 12.sp, color = TextWhite)
-                            }
-                            Button(
-                                onClick = {
-                                    onConnectAccount(usernameInput, goldenKeyInput, userAgentInput)
-                                    showManualKeyForm = false
-                                },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = NeonCyan, contentColor = Color.Black)
-                            ) {
-                                Text("Сохранить", fontWeight = FontWeight.Bold)
-                            }
+                        PureGlassButton(
+                            onClick = {
+                                onConnectAccount(usernameInput, goldenKeyInput, userAgentInput)
+                                showManualKeyForm = false
+                            },
+                            accentTint = NeonEmerald,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Сохранить и запустить сессию",
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextWhite
+                            )
                         }
                     }
                 }
             }
         }
 
-        // 3. Modules Shortcuts & Device Sessions Info
+        // 3. Compact Glass Automation Modules Card
         item {
             DarkNeonGlassCard {
                 Row(
@@ -477,27 +519,26 @@ fun DashboardScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Модули автоматизации (Без лимитов)",
+                        text = "Активные действия сессии",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
                         color = TextWhite
                     )
-                    DarkNeonStatusBadge(text = "UNLIMITED", color = NeonEmerald)
+                    DarkNeonStatusBadge(text = "АВТОМАТИКА", color = NeonEmerald)
                 }
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 DarkModuleRow(
                     icon = Icons.Default.Bolt,
                     title = "Автоподнятие лотов 24/7",
-                    subtitle = "Активных категорий: ${lotCategories.count { it.isAutoRaiseEnabled }} • Без лимита подъемов",
+                    subtitle = "Разделов: ${lotCategories.count { it.isAutoRaiseEnabled }} • Вечный онлайн",
                     checked = settings.isAutoRaiseMasterEnabled,
                     onClick = { onNavigateToTab(1) }
                 )
 
                 DarkModuleRow(
                     icon = Icons.Default.CheckCircle,
-                    title = "Автоответчик и Приветствие",
-                    subtitle = if (settings.isGreetingEnabled) "Приветствие включено" else "Только ключевые слова",
+                    title = "Автоответ и Приветствие",
+                    subtitle = if (settings.isGreetingEnabled) "Приветствие + ответы по триггерам" else "Ответы по триггерам",
                     checked = settings.isGreetingEnabled,
                     onClick = { onNavigateToTab(2) }
                 )
@@ -505,15 +546,15 @@ fun DashboardScreen(
                 DarkModuleRow(
                     icon = Icons.Default.SupportAgent,
                     title = "Отзывы и Автотикет в ТП (>24ч)",
-                    subtitle = "Заказов без подтверждения >24ч: $unconfirmedOver24hCount • Без ограничений",
+                    subtitle = "Просрочено >24ч: $unconfirmedOver24hCount шт. • Запрос отзыва",
                     checked = settings.isAutoTicketTpEnabled,
                     onClick = { onNavigateToTab(3) }
                 )
 
                 DarkModuleRow(
                     icon = Icons.Default.NotificationsActive,
-                    title = "Сессии устройств & Сервер 24/7 (Старый девайс)",
-                    subtitle = "Настройка задач для каждого старого смартфона и Telegram мост",
+                    title = "Устройства 24/7 и Telegram",
+                    subtitle = if (settings.isTelegramEnabled) "Уведомления в Telegram включены" else "Настройка старого телефона и бота",
                     checked = settings.isSessionLoopRunning,
                     onClick = { onNavigateToTab(4) }
                 )
@@ -533,17 +574,17 @@ private fun DarkModuleRow(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .clip(RoundedCornerShape(14.dp))
+            .padding(vertical = 3.dp)
+            .clip(RoundedCornerShape(12.dp))
             .clickable { onClick() },
-        shape = RoundedCornerShape(14.dp),
-        color = Color(0xFF0C131D),
-        border = BorderStroke(1.dp, Color(0x3338BDF8))
+        shape = RoundedCornerShape(12.dp),
+        color = Color(0x14FFFFFF),
+        border = BorderStroke(0.8.dp, Color(0x22FFFFFF))
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 12.dp),
+                .padding(horizontal = 11.dp, vertical = 9.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -553,27 +594,48 @@ private fun DarkModuleRow(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFF132235)),
+                        .size(32.dp)
+                        .clip(RoundedCornerShape(9.dp))
+                        .background(Color(0x1FFFFFFF)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(imageVector = icon, contentDescription = null, tint = NeonCyan, modifier = Modifier.size(20.dp))
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = NeonCyan,
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(text = title, style = MaterialTheme.typography.titleMedium, fontSize = 14.sp, color = TextWhite)
-                    Text(text = subtitle, style = MaterialTheme.typography.bodyMedium, fontSize = 12.sp, color = TextDim)
+                Spacer(modifier = Modifier.width(10.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontSize = 12.5.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = TextWhite
+                    )
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontSize = 10.5.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = TextDim
+                    )
                 }
             }
+            Spacer(modifier = Modifier.width(6.dp))
             Switch(
                 checked = checked,
                 onCheckedChange = { onClick() },
+                modifier = Modifier.scale(0.82f),
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.Black,
-                    checkedTrackColor = NeonEmerald,
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = NeonEmerald.copy(alpha = 0.75f),
                     uncheckedThumbColor = TextDim,
-                    uncheckedTrackColor = Color(0xFF1E293B)
+                    uncheckedTrackColor = Color(0x33FFFFFF)
                 )
             )
         }

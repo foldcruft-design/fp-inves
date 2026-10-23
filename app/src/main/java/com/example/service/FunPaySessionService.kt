@@ -14,6 +14,7 @@ import androidx.core.app.NotificationCompat
 import com.example.MainActivity
 import com.example.R
 import com.example.data.AppDatabase
+import com.example.network.FunPayAndTelegramClient
 import com.example.repository.FunPayRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +31,7 @@ class FunPaySessionService : Service() {
     private var workerJob: Job? = null
     private var wakeLock: PowerManager.WakeLock? = null
     private lateinit var repository: FunPayRepository
+    private val networkClient = FunPayAndTelegramClient()
 
     companion object {
         const val CHANNEL_ID = "fp_glass_session_channel"
@@ -72,7 +74,7 @@ class FunPaySessionService : Service() {
             else -> {
                 startForeground(
                     NOTIFICATION_ID,
-                    buildNotification("Сессия 24/7 активна • Мониторинг лотов и заказов FunPay")
+                    buildNotification("Сессия 24/7 запущена • Вход на аккаунт и подъем лотов")
                 )
                 acquireWakeLock()
                 startAutomationLoop()
@@ -90,7 +92,7 @@ class FunPaySessionService : Service() {
                     "FPGlassHelper::SessionWakeLock"
                 ).apply {
                     setReferenceCounted(false)
-                    acquire(24 * 60 * 60 * 1000L) // Renewed in loop for 24/7 old device server
+                    acquire(24 * 60 * 60 * 1000L)
                 }
             }
         } catch (_: Exception) {
@@ -100,10 +102,13 @@ class FunPaySessionService : Service() {
     private fun startAutomationLoop() {
         if (workerJob?.isActive == true) return
         workerJob = serviceScope.launch {
+            val db = AppDatabase.getInstance(applicationContext)
+            val dao = db.funPayDao()
+
             repository.logEvent(
                 category = "SERVER",
-                title = "Запущен 24/7 Сервер-Сессия на устройстве",
-                details = "WakeLock активирован. Фоновое поднятие лотов, проверка неподтвержденных заказов >24ч и Telegram мост работают.",
+                title = "Фоновая сессия 24/7 подключена к FunPay",
+                details = "Выполняется вход на активный аккаунт, поддержание Вечного Онлайна, автоподнятие лотов и мониторинг заказов >24ч.",
                 isSuccess = true
             )
 
@@ -111,38 +116,65 @@ class FunPaySessionService : Service() {
             while (isActive) {
                 cycleCount++
                 try {
-                    val db = AppDatabase.getInstance(applicationContext)
-                    val dao = db.funPayDao()
                     val settings = dao.getSettingsSnapshot()
+                    val activeAccount = dao.getActiveAccount()
+                    val activeNodes = dao.getActiveDeviceNodes()
+
+                    // Determine which tasks are enabled either globally or on active device sessions
+                    val anyNodeRaises = activeNodes.isEmpty() || activeNodes.any { it.taskAutoRaiseLots }
+                    val anyNodeTpTickets = activeNodes.isEmpty() || activeNodes.any { it.taskAutoTpTickets }
+
+                    // 1. Authenticate & keep FunPay session alive (Eternal Online heartbeat)
+                    if (activeAccount != null && (settings?.isEternalOnlineEnabled != false)) {
+                        val profilePing = networkClient.verifyFunPayGoldenKey(
+                            goldenKey = activeAccount.goldenKey,
+                            userAgent = activeAccount.userAgent,
+                            fallbackUsername = activeAccount.username
+                        )
+                        if (profilePing.isSuccess) {
+                            dao.updateAccount(
+                                activeAccount.copy(
+                                    lastSyncTime = System.currentTimeMillis(),
+                                    csrfToken = profilePing.csrfToken.ifBlank { activeAccount.csrfToken }
+                                )
+                            )
+                        }
+                    }
 
                     if (settings != null) {
-                        // 1. Check due lot raises
-                        if (settings.isAutoRaiseMasterEnabled) {
+                        // 2. Execute Auto-Raise of Lots for due categories (or on first cycle startup)
+                        if (settings.isAutoRaiseMasterEnabled && anyNodeRaises) {
                             val now = System.currentTimeMillis()
                             val categories = dao.getEnabledLotCategories()
                             for (cat in categories) {
-                                if (now >= cat.nextRaiseAt) {
+                                if (cycleCount == 1 || now >= cat.nextRaiseAt) {
                                     repository.raiseSingleCategoryNow(cat)
                                 }
                             }
                         }
 
-                        // 2. Check overdue orders (>24h) for automatic support ticket
-                        if (settings.isAutoTicketTpEnabled) {
+                        // 3. Scan unconfirmed orders > 24h and send Auto-Ticket to FunPay Support
+                        if (settings.isAutoTicketTpEnabled && anyNodeTpTickets) {
                             repository.scanAndAutoTicketOverdueOrders()
                         }
                     }
 
-                    // Update foreground notification heartbeat
+                    // Update active Device Node heartbeats
+                    val nowTs = System.currentTimeMillis()
+                    for (node in activeNodes) {
+                        dao.updateDeviceNode(node.copy(lastHeartbeatTimestamp = nowTs))
+                    }
+
+                    val accLabel = activeAccount?.username ?: "Аккаунт активен"
                     val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                     nm.notify(
                         NOTIFICATION_ID,
-                        buildNotification("Цикл #$cycleCount • Вечный онлайн и автоподнятие активны")
+                        buildNotification("$accLabel • Цикл #$cycleCount • Онлайн и автоподнятие активны")
                     )
                 } catch (_: Exception) {
                 }
 
-                delay(30_000L) // Heartbeat every 30s
+                delay(30_000L)
             }
         }
     }
@@ -189,7 +221,7 @@ class FunPaySessionService : Service() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("FP GlassHelper • Сервер 24/7")
+            .setContentTitle("FP GlassHelper • Сессия 24/7")
             .setContentText(statusText)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setOngoing(true)

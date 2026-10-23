@@ -1,6 +1,5 @@
 package com.example.ui.screens
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,20 +15,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddShoppingCart
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.RateReview
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.SupportAgent
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -42,9 +33,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.AutomationSettingsEntity
@@ -52,7 +45,7 @@ import com.example.data.FunPayOrderEntity
 import com.example.ui.components.DarkNeonGlassCard
 import com.example.ui.components.DarkNeonStatusBadge
 import com.example.ui.components.DarkTemplateVariableChipsRow
-import com.example.ui.theme.DarkBorder
+import com.example.ui.components.PureGlassButton
 import com.example.ui.theme.JetBrainsMonoFontFamily
 import com.example.ui.theme.NeonAmber
 import com.example.ui.theme.NeonCyan
@@ -92,39 +85,75 @@ fun OrdersReviewsTicketsScreen(
         modifier = Modifier
             .fillMaxSize()
             .testTag("orders_tp_screen_list"),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // 1. Auto-Ticket to TP Card
         item {
-            DarkNeonGlassCard(elevated = true, accentBorderColor = NeonAmber) {
+            DarkNeonGlassCard(elevated = true) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(imageVector = Icons.Default.SupportAgent, contentDescription = null, tint = NeonAmber, modifier = Modifier.size(24.dp))
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.SupportAgent,
+                            contentDescription = null,
+                            tint = NeonAmber,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column(modifier = Modifier.weight(1f)) {
                             DarkNeonStatusBadge(text = "АВТОТИКЕТ В ТП (> 1 ДНЯ)", color = NeonAmber)
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(text = "Авто-тикет в ТП на заказы >24ч", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextWhite)
-                            Text(text = "Если покупатель не подтверждает > ${thresholdHoursSlider.roundToInt()}ч — бот пишет в ТП", style = MaterialTheme.typography.bodyMedium, fontSize = 12.sp, color = TextLight)
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Text(
+                                text = "Авто-тикет в ТП на заказы >24ч",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = TextWhite
+                            )
+                            Text(
+                                text = "Не подтвержден > ${thresholdHoursSlider.roundToInt()}ч — бот пишет в ТП",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontSize = 10.5.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                color = TextLight
+                            )
                         }
                     }
                     Switch(
                         checked = settings.isAutoTicketTpEnabled,
                         onCheckedChange = {
-                            onSaveSettings(settings.copy(isAutoTicketTpEnabled = it, autoTicketTpTemplate = tpTicketText, unconfirmedThresholdHours = thresholdHoursSlider.roundToInt()))
+                            onSaveSettings(
+                                settings.copy(
+                                    isAutoTicketTpEnabled = it,
+                                    autoTicketTpTemplate = tpTicketText,
+                                    unconfirmedThresholdHours = thresholdHoursSlider.roundToInt()
+                                )
+                            )
                         },
-                        colors = SwitchDefaults.colors(checkedThumbColor = Color.Black, checkedTrackColor = NeonAmber)
+                        modifier = Modifier.scale(0.82f),
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = NeonAmber.copy(alpha = 0.75f),
+                            uncheckedThumbColor = TextDim,
+                            uncheckedTrackColor = Color(0x33FFFFFF)
+                        )
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
-                Text(text = "Порог: ${thresholdHoursSlider.roundToInt()} часов (1 сутки)", style = MaterialTheme.typography.labelLarge, color = TextWhite)
+                Text(
+                    text = "Порог ожидания: ${thresholdHoursSlider.roundToInt()} ч. (1 сутки)",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontSize = 11.sp,
+                    color = TextWhite
+                )
                 Slider(
                     value = thresholdHoursSlider,
                     onValueChange = { thresholdHoursSlider = it },
@@ -133,40 +162,53 @@ fun OrdersReviewsTicketsScreen(
                     colors = SliderDefaults.colors(thumbColor = NeonAmber, activeTrackColor = NeonAmber)
                 )
 
-                DarkTemplateVariableChipsRow(variables = orderVariables, onInsertVariable = { tpTicketText = "$tpTicketText $it" })
+                DarkTemplateVariableChipsRow(
+                    variables = orderVariables,
+                    onInsertVariable = { tpTicketText = "$tpTicketText $it" }
+                )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 OutlinedTextField(
                     value = tpTicketText,
                     onValueChange = { tpTicketText = it },
-                    label = { Text("Текст запроса в ТП FunPay") },
+                    label = { Text("Текст запроса в ТП FunPay", fontSize = 11.sp) },
                     minLines = 2,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextWhite, unfocusedTextColor = TextWhite)
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = TextWhite,
+                        unfocusedTextColor = TextWhite
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(
-                        onClick = { onSaveSettings(settings.copy(unconfirmedThresholdHours = thresholdHoursSlider.roundToInt(), autoTicketTpTemplate = tpTicketText)) },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, NeonCyan)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    PureGlassButton(
+                        onClick = {
+                            onSaveSettings(
+                                settings.copy(
+                                    unconfirmedThresholdHours = thresholdHoursSlider.roundToInt(),
+                                    autoTicketTpTemplate = tpTicketText
+                                )
+                            )
+                        },
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Text("Сохранить", color = NeonCyan)
+                        Text("Сохранить", color = TextWhite, fontSize = 11.5.sp)
                     }
 
-                    Button(
+                    PureGlassButton(
                         onClick = onScanAllOverdueOrdersForTp,
                         enabled = !isBusy,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = NeonAmber, contentColor = Color.Black)
+                        accentTint = NeonAmber,
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Text("Отправить в ТП", fontWeight = FontWeight.Bold)
+                        Text("Отправить в ТП", fontWeight = FontWeight.Bold, color = TextWhite, fontSize = 11.5.sp)
                     }
                 }
             }
@@ -174,55 +216,119 @@ fun OrdersReviewsTicketsScreen(
 
         // 2. Review Request & Reply Card
         item {
-            DarkNeonGlassCard(accentBorderColor = NeonEmerald) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            DarkNeonGlassCard {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(text = "Просьба отзыва и автоответ", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextWhite)
-                        Text(text = "Благодарность после подтверждения + ответ на отзыв", style = MaterialTheme.typography.bodyMedium, fontSize = 12.sp, color = TextLight)
+                        Text(
+                            text = "Просьба отзыва и автоответ",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = TextWhite
+                        )
+                        Text(
+                            text = "После подтверждения заказа + ответ на отзыв",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontSize = 10.5.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = TextLight
+                        )
                     }
                     Switch(
                         checked = settings.isAskReviewAfterConfirmEnabled,
-                        onCheckedChange = { onSaveSettings(settings.copy(isAskReviewAfterConfirmEnabled = it, askReviewTemplate = askReviewText)) },
-                        colors = SwitchDefaults.colors(checkedThumbColor = Color.Black, checkedTrackColor = NeonEmerald)
+                        onCheckedChange = {
+                            onSaveSettings(
+                                settings.copy(
+                                    isAskReviewAfterConfirmEnabled = it,
+                                    askReviewTemplate = askReviewText
+                                )
+                            )
+                        },
+                        modifier = Modifier.scale(0.82f),
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = NeonEmerald.copy(alpha = 0.75f),
+                            uncheckedThumbColor = TextDim,
+                            uncheckedTrackColor = Color(0x33FFFFFF)
+                        )
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 OutlinedTextField(
                     value = askReviewText,
                     onValueChange = { askReviewText = it },
-                    label = { Text("Шаблон просьбы отзыва") },
+                    label = { Text("Шаблон просьбы отзыва", fontSize = 11.sp) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextWhite, unfocusedTextColor = TextWhite)
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = TextWhite,
+                        unfocusedTextColor = TextWhite
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                OutlinedTextField(
+                    value = reviewReplyText,
+                    onValueChange = { reviewReplyText = it },
+                    label = { Text("Шаблон автоответа на отзыв", fontSize = 11.sp) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = TextWhite,
+                        unfocusedTextColor = TextWhite
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Button(
-                    onClick = { onSaveSettings(settings.copy(askReviewTemplate = askReviewText, reviewReplyTemplate = reviewReplyText)) },
-                    modifier = Modifier.align(Alignment.End),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = NeonEmerald, contentColor = Color.Black)
+                PureGlassButton(
+                    onClick = {
+                        onSaveSettings(
+                            settings.copy(
+                                askReviewTemplate = askReviewText,
+                                reviewReplyTemplate = reviewReplyText
+                            )
+                        )
+                    },
+                    accentTint = NeonEmerald,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Сохранить шаблоны", fontWeight = FontWeight.Bold)
+                    Text("Сохранить шаблоны отзывов", fontWeight = FontWeight.Bold, fontSize = 11.5.sp, color = TextWhite)
                 }
             }
         }
 
         // 3. Orders List Header
         item {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text(text = "Заказы (${orders.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextWhite)
-                OutlinedButton(
-                    onClick = { onCreateTestOrder("Buyer_${(10..99).random()}", "Игровая валюта (Выдано)", 1650.0, 27) },
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, NeonCyan)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Заказы (${orders.size})",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextWhite
+                )
+                PureGlassButton(
+                    onClick = {
+                        onCreateTestOrder("Buyer_${(10..99).random()}", "Игровая валюта (Выдано)", 1650.0, 27)
+                    }
                 ) {
-                    Icon(imageVector = Icons.Default.AddShoppingCart, contentDescription = null, tint = NeonCyan, modifier = Modifier.size(16.dp))
+                    Icon(
+                        imageVector = Icons.Default.AddShoppingCart,
+                        contentDescription = null,
+                        tint = NeonCyan,
+                        modifier = Modifier.size(14.dp)
+                    )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("+ Заказ (27ч)", color = NeonCyan, fontSize = 12.sp)
+                    Text("+ Заказ (27ч)", color = TextWhite, fontSize = 11.sp)
                 }
             }
         }
@@ -232,21 +338,28 @@ fun OrdersReviewsTicketsScreen(
             val hoursElapsed = ((System.currentTimeMillis() - order.createdAtTimestamp) / 3600_000L).coerceAtLeast(1L)
             val isOverdue = order.status == "PAID" && hoursElapsed >= settings.unconfirmedThresholdHours
 
-            DarkNeonGlassCard(
-                accentBorderColor = when {
-                    order.isSupportTicketSent -> NeonCyan
-                    isOverdue -> NeonAmber
-                    order.status == "CLOSED" -> NeonEmerald
-                    else -> null
-                }
-            ) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "#${order.orderId} • ${order.buyerName}", fontFamily = JetBrainsMonoFontFamily, fontWeight = FontWeight.Bold, color = TextWhite)
+            DarkNeonGlassCard {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "#${order.orderId} • ${order.buyerName}",
+                        fontFamily = JetBrainsMonoFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.5.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = TextWhite,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
                     DarkNeonStatusBadge(
                         text = when {
                             order.status == "CLOSED" -> "ЗАКРЫТ"
                             order.isSupportTicketSent -> "ТИКЕТ: ${order.supportTicketId}"
-                            isOverdue -> "НЕ ПОДТВЕРЖДЕН ${hoursElapsed}Ч (>24Ч)"
+                            isOverdue -> "ОЖИДАЕТ ${hoursElapsed}Ч"
                             else -> "ОПЛАЧЕН (${hoursElapsed}Ч)"
                         },
                         color = when {
@@ -257,30 +370,43 @@ fun OrdersReviewsTicketsScreen(
                         }
                     )
                 }
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(text = order.lotDescription, style = MaterialTheme.typography.bodyMedium, color = TextLight)
-                Text(text = "Сумма: ${order.priceRub.toInt()} ₽", fontFamily = JetBrainsMonoFontFamily, fontSize = 12.sp, color = NeonCyan)
+                Spacer(modifier = Modifier.height(3.dp))
+                Text(
+                    text = order.lotDescription,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontSize = 11.5.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = TextLight
+                )
+                Text(
+                    text = "Сумма: ${order.priceRub.toInt()} ₽",
+                    fontFamily = JetBrainsMonoFontFamily,
+                    fontSize = 10.5.sp,
+                    color = NeonCyan
+                )
 
                 if (order.status == "PAID") {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Spacer(modifier = Modifier.height(7.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         if (!order.isSupportTicketSent) {
-                            Button(
+                            PureGlassButton(
                                 onClick = { onSendTicketToTp(order) },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = NeonAmber, contentColor = Color.Black)
+                                accentTint = NeonAmber,
+                                modifier = Modifier.weight(1f)
                             ) {
-                                Text("Автотикет в ТП", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                Text("Автотикет в ТП", fontWeight = FontWeight.SemiBold, fontSize = 11.sp, color = TextWhite)
                             }
                         }
-                        OutlinedButton(
+                        PureGlassButton(
                             onClick = { onConfirmOrderAndReview(order) },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            border = BorderStroke(1.dp, NeonEmerald)
+                            accentTint = NeonEmerald,
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Text("Подтвердить + Отзыв", color = NeonEmerald, fontSize = 12.sp)
+                            Text("Подтвердить + Отзыв", fontSize = 11.sp, color = TextWhite)
                         }
                     }
                 }

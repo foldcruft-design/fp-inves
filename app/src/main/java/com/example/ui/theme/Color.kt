@@ -2,30 +2,30 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Pure Pitch-Black & Deep Cyber Dark Palette
-val DarkBackground = Color(0xFF070A0F)         // Pure Dark Abyss
-val DarkBackgroundElevated = Color(0xFF0D121B) // Deep Slate Card Surface
-val DarkSurfaceCard = Color(0xFF131B27)        // Glass Dark Layer (90% opaque)
-val DarkSurfaceElevated = Color(0xFF1A2332)    // Highlighted Card
-val DarkBorder = Color(0x3338BDF8)             // Subtle Cyber Blue Specular Border
-val DarkBorderHighlight = Color(0x6638BDF8)    // Active Border
+// Sleek Dark Frosted Glassmorphism Palette (Clean, No Harsh Neon Clutter)
+val DarkBackground = Color(0xFF090C12)          // Deep Obsidian Background
+val DarkBackgroundElevated = Color(0xFF101520)  // Frosted Glass Base
+val DarkSurfaceCard = Color(0xCC131926)         // 80% Translucent Dark Glass Card
+val DarkSurfaceElevated = Color(0xE6182030)     // 90% Translucent Elevated Glass Card
+val DarkBorder = Color(0x28FFFFFF)              // Subtle 16% White Specular Glass Edge
+val DarkBorderHighlight = Color(0x4DFFFFFF)     // 30% Crisp Glass Edge
 
-// Neon Cyber Accents
-val NeonCyan = Color(0xFF00F0FF)               // Electric Cyan (Primary)
-val NeonCyanGlow = Color(0x2E00F0FF)           // Glow cyan
-val NeonBlue = Color(0xFF3B82F6)               // Royal Cobalt
-val NeonEmerald = Color(0xFF10B981)            // Green Online / Boost
-val NeonAmber = Color(0xFFF59E0B)              // Amber Warning (>24h orders)
-val NeonCoral = Color(0xFFF43F5E)              // Coral Danger
-val NeonPurple = Color(0xFFA855F7)             // Telegram & AI
+// Refined Glass Accents
+val NeonCyan = Color(0xFF38BDF8)                // Soft Sky Crystal Accent
+val NeonCyanGlow = Color(0x1F38BDF8)
+val NeonBlue = Color(0xFF60A5FA)                // Clean Sapphire
+val NeonEmerald = Color(0xFF34D399)             // Soft Mint Online Indicator
+val NeonAmber = Color(0xFFFBBF24)               // Warm Gold for >24h Support Tickets
+val NeonCoral = Color(0xFFF87171)               // Soft Rose for Delete/Stop
+val NeonPurple = Color(0xFFA78BFA)
 
-// High Contrast Modern Text
-val TextWhite = Color(0xFFF8FAFC)              // Primary Bold Title
-val TextLight = Color(0xFFCBD5E1)              // Secondary Body
-val TextDim = Color(0xFF64748B)                // Muted Caption
-val TextCyan = Color(0xFF38BDF8)               // Accent Labels
+// Balanced High-Readability Typography Colors
+val TextWhite = Color(0xFFF1F5F9)               // Crisp Off-White
+val TextLight = Color(0xFF94A3B8)               // Secondary Frosted Grey
+val TextDim = Color(0xFF64748B)                 // Muted Slate Caption
+val TextCyan = Color(0xFF7DD3FC)                // Soft Ice Blue Label
 
-// Google Brand Colors for 1-Click Login
+// Google Brand Colors
 val GoogleBlue = Color(0xFF4285F4)
 val GoogleRed = Color(0xFFEA4335)
 val GoogleYellow = Color(0xFFFBBC05)

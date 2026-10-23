@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -70,10 +71,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -90,6 +91,7 @@ import com.example.ui.theme.FPGlassHelperTheme
 import com.example.ui.theme.NeonCyan
 import com.example.ui.theme.NeonEmerald
 import com.example.ui.theme.TextDim
+import com.example.ui.theme.TextLight
 import com.example.ui.theme.TextWhite
 import com.example.viewmodel.FunPayViewModel
 import kotlinx.coroutines.delay
@@ -164,6 +166,9 @@ fun FPGlassMainApp(
             targetUrl = webAuthUrlToOpen!!,
             onDismiss = { webAuthUrlToOpen = null },
             onSessionCaptured = { key, ua, username ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
                 viewModel.connectFunPayAccount(username, key, ua)
                 webAuthUrlToOpen = null
             }
@@ -223,41 +228,44 @@ fun FPGlassMainApp(
                     modifier = Modifier
                         .fillMaxWidth()
                         .windowInsetsPadding(WindowInsets.statusBars)
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
-                    shape = RoundedCornerShape(18.dp),
-                    color = Color(0xF20B111A),
-                    border = BorderStroke(1.dp, Color(0x3338BDF8)),
-                    shadowElevation = 6.dp
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                    shape = RoundedCornerShape(15.dp),
+                    color = Color(0xCC131926),
+                    border = BorderStroke(0.8.dp, Color(0x28FFFFFF)),
+                    shadowElevation = 4.dp
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "FunPay Tools Pro",
+                                text = "FP GlassHelper",
                                 style = MaterialTheme.typography.titleLarge,
+                                fontSize = 14.5.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = TextWhite
                             )
                             val activeAcc = accounts.firstOrNull { it.isActive } ?: accounts.firstOrNull()
                             Text(
                                 text = if (activeAcc != null) {
-                                    "${activeAcc.username} • Баланс: ${activeAcc.balanceRub.toInt()} ₽"
+                                    "${activeAcc.username} • ${activeAcc.balanceRub.toInt()} ₽"
                                 } else {
-                                    "Вход FunPay / Google • Сессия 24/7"
+                                    "Сессия FunPay 24/7"
                                 },
                                 style = MaterialTheme.typography.bodyMedium,
-                                fontSize = 11.sp,
-                                color = NeonCyan
+                                fontSize = 10.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                color = TextLight
                             )
                         }
 
                         DarkNeonStatusBadge(
-                            text = if (settings.isSessionLoopRunning) "СЕССИЯ 24/7" else "ОНЛАЙН",
+                            text = if (settings.isSessionLoopRunning) "ОНЛАЙН 24/7" else "СТАРТ",
                             color = if (settings.isSessionLoopRunning) NeonEmerald else NeonCyan,
                             modifier = Modifier.clickable {
                                 if (!settings.isSessionLoopRunning && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -274,13 +282,14 @@ fun FPGlassMainApp(
                     modifier = Modifier
                         .fillMaxWidth()
                         .windowInsetsPadding(WindowInsets.navigationBars)
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                    shape = RoundedCornerShape(22.dp),
-                    color = Color(0xF50D1522),
-                    border = BorderStroke(1.dp, Color(0x4038BDF8)),
-                    shadowElevation = 10.dp
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    color = Color(0xD9131926),
+                    border = BorderStroke(0.8.dp, Color(0x2EFFFFFF)),
+                    shadowElevation = 6.dp
                 ) {
                     NavigationBar(
+                        modifier = Modifier.height(58.dp),
                         containerColor = Color.Transparent,
                         tonalElevation = 0.dp,
                         windowInsets = WindowInsets(0, 0, 0, 0)
@@ -294,20 +303,23 @@ fun FPGlassMainApp(
                                 icon = {
                                     Icon(
                                         imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
-                                        contentDescription = stringResource(id = item.labelRes)
+                                        contentDescription = stringResource(id = item.labelRes),
+                                        modifier = Modifier.size(18.dp)
                                     )
                                 },
                                 label = {
                                     Text(
                                         text = stringResource(id = item.labelRes),
-                                        fontSize = 10.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                        fontSize = 9.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                     )
                                 },
                                 colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = NeonCyan,
-                                    selectedTextColor = NeonCyan,
-                                    indicatorColor = Color(0xFF132B45),
+                                    selectedIconColor = TextWhite,
+                                    selectedTextColor = TextWhite,
+                                    indicatorColor = Color(0x26FFFFFF),
                                     unselectedIconColor = TextDim,
                                     unselectedTextColor = TextDim
                                 )
@@ -322,16 +334,15 @@ fun FPGlassMainApp(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // Animated Screen Transitions
                 AnimatedContent(
                     targetState = selectedTab,
                     transitionSpec = {
                         if (targetState > initialState) {
-                            (slideInHorizontally(animationSpec = tween(280)) { width -> width } + fadeIn(animationSpec = tween(280)))
-                                .togetherWith(slideOutHorizontally(animationSpec = tween(280)) { width -> -width } + fadeOut(animationSpec = tween(280)))
+                            (slideInHorizontally(animationSpec = tween(250)) { width -> width } + fadeIn(animationSpec = tween(250)))
+                                .togetherWith(slideOutHorizontally(animationSpec = tween(250)) { width -> -width } + fadeOut(animationSpec = tween(250)))
                         } else {
-                            (slideInHorizontally(animationSpec = tween(280)) { width -> -width } + fadeIn(animationSpec = tween(280)))
-                                .togetherWith(slideOutHorizontally(animationSpec = tween(280)) { width -> width } + fadeOut(animationSpec = tween(280)))
+                            (slideInHorizontally(animationSpec = tween(250)) { width -> -width } + fadeIn(animationSpec = tween(250)))
+                                .togetherWith(slideOutHorizontally(animationSpec = tween(250)) { width -> width } + fadeOut(animationSpec = tween(250)))
                         }
                     },
                     label = "tab_crossfade"
@@ -344,8 +355,18 @@ fun FPGlassMainApp(
                             settings = settings,
                             isBusy = isBusy,
                             onOpenFunPayWebAuth = { url -> webAuthUrlToOpen = url },
-                            onLoginGoogleFast = { name, email -> viewModel.loginWithGoogle(name, email) },
-                            onConnectAccount = { user, key, ua -> viewModel.connectFunPayAccount(user, key, ua) },
+                            onLoginGoogleFast = { name, email ->
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                }
+                                viewModel.loginWithGoogle(name, email)
+                            },
+                            onConnectAccount = { user, key, ua ->
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                }
+                                viewModel.connectFunPayAccount(user, key, ua)
+                            },
                             onSwitchAccount = { viewModel.switchActiveAccount(it) },
                             onDeleteAccount = { viewModel.deleteAccount(it) },
                             onToggleSession24x7 = { enable ->
@@ -423,44 +444,45 @@ fun FPGlassMainApp(
                     }
                 }
 
-                // Floating Banner
+                // Compact Frosted Glass Notification Toast Banner
                 AnimatedVisibility(
                     visible = statusBanner != null,
                     enter = fadeIn(),
                     exit = fadeOut(),
                     modifier = Modifier
                         .align(Alignment.TopCenter)
-                        .padding(horizontal = 16.dp, vertical = 6.dp)
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
                 ) {
                     Surface(
-                        shape = RoundedCornerShape(14.dp),
-                        color = Color(0xF20F1E2E),
-                        border = BorderStroke(1.dp, NeonCyan),
-                        shadowElevation = 8.dp
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xEB182030),
+                        border = BorderStroke(0.8.dp, Color(0x4DFFFFFF)),
+                        shadowElevation = 6.dp
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 text = statusBanner.orEmpty(),
                                 style = MaterialTheme.typography.bodyMedium,
+                                fontSize = 11.sp,
                                 color = TextWhite,
                                 modifier = Modifier.weight(1f)
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
                             IconButton(
                                 onClick = { viewModel.dismissBanner() },
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(20.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
                                     contentDescription = "Закрыть",
                                     tint = TextWhite,
-                                    modifier = Modifier.size(16.dp)
+                                    modifier = Modifier.size(14.dp)
                                 )
                             }
                         }

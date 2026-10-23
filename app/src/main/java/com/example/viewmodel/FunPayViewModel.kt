@@ -98,8 +98,38 @@ class FunPayViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             _isBusy.value = true
             val (ok, msg) = repository.loginWithGoogleOneClick(userName, email)
+            if (ok) {
+                startSessionAndRunInitialTasks()
+            }
             _isBusy.value = false
-            showBanner(if (ok) "✨ $msg" else "⚠️ $msg")
+            showBanner(if (ok) "✨ $msg • Сессия запущена!" else "⚠️ $msg")
+        }
+    }
+
+    private suspend fun startSessionAndRunInitialTasks() {
+        val current = settings.value
+        if (!current.isSessionLoopRunning) {
+            repository.updateSettings(current.copy(isSessionLoopRunning = true))
+        }
+        FunPaySessionService.startService(getApplication())
+        if (current.isAutoRaiseMasterEnabled) {
+            repository.raiseAllEnabledCategories()
+        }
+        if (current.isAutoTicketTpEnabled) {
+            repository.scanAndAutoTicketOverdueOrders()
+        }
+    }
+
+    // Account actions
+    fun connectFunPayAccount(username: String, goldenKey: String, userAgent: String) {
+        viewModelScope.launch {
+            _isBusy.value = true
+            val (ok, msg) = repository.addAndVerifyAccount(username, goldenKey, userAgent)
+            if (ok) {
+                startSessionAndRunInitialTasks()
+            }
+            _isBusy.value = false
+            showBanner(if (ok) "✅ $msg • Сессия и автоподнятие запущены!" else "⚠️ $msg")
         }
     }
 
@@ -120,16 +150,6 @@ class FunPayViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             repository.deleteDeviceNode(node)
             showBanner("Устройство ${node.deviceName} удалено")
-        }
-    }
-
-    // Account actions
-    fun connectFunPayAccount(username: String, goldenKey: String, userAgent: String) {
-        viewModelScope.launch {
-            _isBusy.value = true
-            val (ok, msg) = repository.addAndVerifyAccount(username, goldenKey, userAgent)
-            _isBusy.value = false
-            showBanner(if (ok) "✅ $msg" else "⚠️ $msg")
         }
     }
 
