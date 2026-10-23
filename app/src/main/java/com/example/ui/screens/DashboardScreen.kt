@@ -1,6 +1,9 @@
 package com.example.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -30,7 +33,6 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.filled.SupportAgent
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -38,6 +40,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -50,6 +53,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -60,18 +64,22 @@ import com.example.data.AutomationSettingsEntity
 import com.example.data.FunPayAccountEntity
 import com.example.data.FunPayOrderEntity
 import com.example.data.LotCategoryEntity
-import com.example.ui.components.FrostedGlassCard
-import com.example.ui.components.GlassMetricTile
-import com.example.ui.components.GlassStatusBadge
-import com.example.ui.theme.GlassAccentDanger
-import com.example.ui.theme.GlassAccentMint
-import com.example.ui.theme.GlassAccentWarning
-import com.example.ui.theme.GlassPrimary
-import com.example.ui.theme.GlassSecondary
+import com.example.ui.components.DarkMetricTile
+import com.example.ui.components.DarkNeonGlassCard
+import com.example.ui.components.DarkNeonStatusBadge
+import com.example.ui.components.GoogleLogoIcon
+import com.example.ui.theme.DarkBackgroundElevated
+import com.example.ui.theme.DarkBorder
+import com.example.ui.theme.GoogleBlue
 import com.example.ui.theme.JetBrainsMonoFontFamily
-import com.example.ui.theme.TextSlateDark
-import com.example.ui.theme.TextSlateMedium
-import com.example.ui.theme.TextSlateMuted
+import com.example.ui.theme.NeonAmber
+import com.example.ui.theme.NeonCoral
+import com.example.ui.theme.NeonCyan
+import com.example.ui.theme.NeonEmerald
+import com.example.ui.theme.TextCyan
+import com.example.ui.theme.TextDim
+import com.example.ui.theme.TextLight
+import com.example.ui.theme.TextWhite
 
 @Composable
 fun DashboardScreen(
@@ -80,6 +88,7 @@ fun DashboardScreen(
     orders: List<FunPayOrderEntity>,
     settings: AutomationSettingsEntity,
     isBusy: Boolean,
+    onLoginGoogle: (String, String) -> Unit,
     onConnectAccount: (String, String, String) -> Unit,
     onSwitchAccount: (FunPayAccountEntity) -> Unit,
     onDeleteAccount: (FunPayAccountEntity) -> Unit,
@@ -88,13 +97,12 @@ fun DashboardScreen(
     onScanOverdueOrdersNow: () -> Unit,
     onNavigateToTab: (Int) -> Unit
 ) {
-    var showAddAccountForm by remember { mutableStateOf(accounts.isEmpty()) }
+    var showManualKeyForm by remember { mutableStateOf(false) }
     var usernameInput by remember { mutableStateOf("") }
     var goldenKeyInput by remember { mutableStateOf("") }
     var userAgentInput by remember {
-        mutableStateOf("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0.0.0 Safari/537.36")
+        mutableStateOf("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
     }
-    var showCookieGuide by remember { mutableStateOf(false) }
 
     val activeAccount = accounts.firstOrNull { it.isActive } ?: accounts.firstOrNull()
     val totalRaises = lotCategories.sumOf { it.totalRaisesCount }
@@ -102,7 +110,11 @@ fun DashboardScreen(
         it.status == "PAID" && !it.isSupportTicketSent &&
             (System.currentTimeMillis() - it.createdAtTimestamp) >= (settings.unconfirmedThresholdHours * 3600_000L)
     }
-    val totalTicketsSent = orders.count { it.isSupportTicketSent }
+
+    val powerScale by animateFloatAsState(
+        targetValue = if (settings.isSessionLoopRunning) 1.05f else 1f,
+        label = "power_btn_scale"
+    )
 
     LazyColumn(
         modifier = Modifier
@@ -111,11 +123,11 @@ fun DashboardScreen(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 1. Hero Crystal Glass Banner
+        // 1. Neon Cyber Hero Status Card
         item {
-            FrostedGlassCard(
+            DarkNeonGlassCard(
                 elevated = true,
-                accentBorderColor = if (settings.isSessionLoopRunning) GlassAccentMint else GlassPrimary
+                accentBorderColor = if (settings.isSessionLoopRunning) NeonEmerald else NeonCyan
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -123,34 +135,36 @@ fun DashboardScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        GlassStatusBadge(
-                            text = if (settings.isSessionLoopRunning) "СЕРВЕР-СЕССИЯ 24/7 АКТИВНА" else "СЕССИЯ В ОЖИДАНИИ",
-                            color = if (settings.isSessionLoopRunning) GlassAccentMint else GlassPrimary
+                        DarkNeonStatusBadge(
+                            text = if (settings.isSessionLoopRunning) "СЕССИЯ 24/7 АКТИВНА" else "СЕССИЯ ОСТАНОВЛЕНА",
+                            color = if (settings.isSessionLoopRunning) NeonEmerald else TextDim
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "FP GlassHelper Pro",
+                            text = "FunPay Cyber Helper",
                             style = MaterialTheme.typography.headlineMedium,
-                            color = TextSlateDark
+                            fontWeight = FontWeight.Bold,
+                            color = TextWhite
                         )
                         Text(
-                            text = "Автоподнятие лотов • Автоответ • Отзывы • Автотикеты в ТП (>24ч) • Telegram",
+                            text = "Автоподнятие лотов • Автоответ • Автотикеты в ТП (>24ч) • Telegram",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = TextSlateMedium
+                            color = TextLight
                         )
                     }
 
-                    // Power Toggle Button for 24/7 Session
+                    // Futuristic Cyber Power Button
                     Box(
                         modifier = Modifier
-                            .size(58.dp)
+                            .scale(powerScale)
+                            .size(56.dp)
                             .clip(CircleShape)
                             .background(
                                 brush = Brush.linearGradient(
                                     colors = if (settings.isSessionLoopRunning) {
-                                        listOf(GlassAccentMint, Color(0xFF059669))
+                                        listOf(NeonEmerald, Color(0xFF047857))
                                     } else {
-                                        listOf(GlassPrimary, GlassSecondary)
+                                        listOf(NeonCyan, Color(0xFF0284C7))
                                     }
                                 )
                             )
@@ -160,46 +174,46 @@ fun DashboardScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.PowerSettingsNew,
-                            contentDescription = "Запустить сессию 24/7",
-                            tint = Color.White,
-                            modifier = Modifier.size(30.dp)
+                            contentDescription = "Питание сессии",
+                            tint = Color.Black,
+                            modifier = Modifier.size(28.dp)
                         )
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // 4 Live Metrics Grid
+                // 3 Cyber Metric Tiles
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    GlassMetricTile(
+                    DarkMetricTile(
                         title = "Баланс FunPay",
-                        value = if (activeAccount != null) "${activeAccount.balanceRub.toInt()} ₽" else "12 450 ₽",
-                        subtitle = activeAccount?.username ?: "Демо-режим",
-                        accentColor = GlassPrimary,
+                        value = if (activeAccount != null) "${activeAccount.balanceRub.toInt()} ₽" else "15 800 ₽",
+                        subtitle = activeAccount?.username ?: "Google Аккаунт",
+                        accentColor = NeonCyan,
                         modifier = Modifier.weight(1f)
                     )
-                    GlassMetricTile(
-                        title = "Поднятий в ТОП",
+                    DarkMetricTile(
+                        title = "Поднятий лотов",
                         value = "$totalRaises",
-                        subtitle = "${lotCategories.count { it.isAutoRaiseEnabled }} актив. разд.",
-                        accentColor = GlassAccentMint,
+                        subtitle = "${lotCategories.count { it.isAutoRaiseEnabled }} категорий",
+                        accentColor = NeonEmerald,
                         modifier = Modifier.weight(1f)
                     )
-                    GlassMetricTile(
+                    DarkMetricTile(
                         title = "Заказы >24ч",
-                        value = "$unconfirmedOver24hCount",
-                        subtitle = "Отправлено ТП: $totalTicketsSent",
-                        accentColor = if (unconfirmedOver24hCount > 0) GlassAccentWarning else GlassPrimary,
+                        value = "$unconfirmedOver24hCount шт.",
+                        subtitle = "В ТП: ${orders.count { it.isSupportTicketSent }}",
+                        accentColor = if (unconfirmedOver24hCount > 0) NeonAmber else NeonCyan,
                         modifier = Modifier.weight(1f)
                     )
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Quick Action Bar
+                // Action Buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -212,15 +226,14 @@ fun DashboardScreen(
                             .height(48.dp)
                             .testTag("quick_raise_all_button"),
                         shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = GlassPrimary)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.RocketLaunch,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = NeonCyan,
+                            contentColor = Color.Black
                         )
+                    ) {
+                        Icon(imageVector = Icons.Default.RocketLaunch, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Поднять лоты", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Text("Поднять лоты", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                     }
 
                     OutlinedButton(
@@ -231,88 +244,88 @@ fun DashboardScreen(
                             .height(48.dp)
                             .testTag("quick_scan_tp_button"),
                         shape = RoundedCornerShape(14.dp),
-                        border = BorderStroke(1.2.dp, GlassAccentWarning)
+                        border = BorderStroke(1.dp, NeonAmber)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.SupportAgent,
-                            contentDescription = null,
-                            tint = GlassAccentWarning,
-                            modifier = Modifier.size(18.dp)
-                        )
+                        Icon(imageVector = Icons.Default.SupportAgent, contentDescription = null, tint = NeonAmber, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "Тикеты в ТП (>24ч)",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = TextSlateDark
-                        )
+                        Text("Тикеты в ТП", color = NeonAmber, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                     }
                 }
             }
         }
 
-        // 2. FunPay Account Connection & Multi-Account Manager
+        // 2. Google 1-Click Fast Connect & Accounts
         item {
-            FrostedGlassCard(accentBorderColor = GlassPrimary) {
+            DarkNeonGlassCard(accentBorderColor = GoogleBlue) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Key,
-                            contentDescription = null,
-                            tint = GlassPrimary,
-                            modifier = Modifier.size(22.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        GoogleLogoIcon(modifier = Modifier.size(24.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "Аккаунты FunPay (golden_key)",
+                                text = "Вход и привязка через Google",
                                 style = MaterialTheme.typography.titleMedium,
-                                color = TextSlateDark
+                                fontWeight = FontWeight.Bold,
+                                color = TextWhite
                             )
                             Text(
-                                text = "Привяжите аккаунт для поднятия лотов, чата и авто-тикетов",
+                                text = "Мгновенное подключение без сложного ввода cookie",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontSize = 12.sp,
-                                color = TextSlateMuted
+                                color = TextLight
                             )
                         }
                     }
-
-                    OutlinedButton(
-                        onClick = { showAddAccountForm = !showAddAccountForm },
-                        modifier = Modifier.testTag("toggle_add_account_button"),
-                        shape = RoundedCornerShape(12.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Добавить аккаунт",
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(if (showAddAccountForm) "Скрыть" else "Добавить", fontSize = 12.sp)
-                    }
                 }
 
-                // Existing Linked Accounts
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Large Google Sign-in Button
+                Button(
+                    onClick = {
+                        onLoginGoogle("Google Trader", "trader@gmail.com")
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .testTag("google_login_one_click_button"),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF1E293B),
+                        contentColor = TextWhite
+                    ),
+                    border = BorderStroke(1.2.dp, GoogleBlue)
+                ) {
+                    GoogleLogoIcon(modifier = Modifier.size(22.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Войти через Google в 1 клик",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = TextWhite
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Existing Accounts List
                 if (accounts.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(12.dp))
                     accounts.forEach { acc ->
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp)
-                                .clip(RoundedCornerShape(16.dp))
+                                .clip(RoundedCornerShape(14.dp))
                                 .clickable { onSwitchAccount(acc) },
-                            shape = RoundedCornerShape(16.dp),
-                            color = if (acc.isActive) Color(0xFFE0F2FE) else Color(0x99FFFFFF),
+                            shape = RoundedCornerShape(14.dp),
+                            color = if (acc.isActive) Color(0xFF0F2338) else Color(0xFF0A0F17),
                             border = BorderStroke(
                                 width = 1.dp,
-                                color = if (acc.isActive) GlassPrimary else Color(0xFFE2E8F0)
+                                color = if (acc.isActive) NeonCyan else DarkBorder
                             )
                         ) {
                             Row(
@@ -326,7 +339,7 @@ fun DashboardScreen(
                                     Icon(
                                         imageVector = if (acc.isActive) Icons.Default.CheckCircle else Icons.Default.Person,
                                         contentDescription = null,
-                                        tint = if (acc.isActive) GlassAccentMint else TextSlateMuted,
+                                        tint = if (acc.isActive) NeonEmerald else TextDim,
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Spacer(modifier = Modifier.width(10.dp))
@@ -335,13 +348,13 @@ fun DashboardScreen(
                                             text = "${acc.username} (ID: ${acc.userId})",
                                             style = MaterialTheme.typography.titleMedium,
                                             fontSize = 14.sp,
-                                            color = TextSlateDark
+                                            color = TextWhite
                                         )
                                         Text(
-                                            text = "golden_key: ${acc.goldenKey.take(6)}••••••${acc.goldenKey.takeLast(4)} • Баланс: ${acc.balanceRub.toInt()} ₽",
+                                            text = "Баланс: ${acc.balanceRub.toInt()} ₽ • ${if (acc.isActive) "Активен" else "Нажмите для выбора"}",
                                             fontFamily = JetBrainsMonoFontFamily,
                                             fontSize = 11.sp,
-                                            color = TextSlateMuted
+                                            color = if (acc.isActive) NeonCyan else TextDim
                                         )
                                     }
                                 }
@@ -351,8 +364,8 @@ fun DashboardScreen(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.DeleteOutline,
-                                        contentDescription = "Удалить аккаунт",
-                                        tint = GlassAccentDanger
+                                        contentDescription = "Удалить",
+                                        tint = NeonCoral
                                     )
                                 }
                             }
@@ -360,168 +373,101 @@ fun DashboardScreen(
                     }
                 }
 
-                // Expandable Add Account Form
-                AnimatedVisibility(visible = showAddAccountForm) {
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = if (showManualKeyForm) "▲ Скрыть ручной ввод golden_key" else "▼ Или привязать через golden_key браузера",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = TextCyan,
+                    modifier = Modifier.clickable { showManualKeyForm = !showManualKeyForm }
+                )
+
+                AnimatedVisibility(visible = showManualKeyForm) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                            .padding(top = 10.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         OutlinedTextField(
                             value = usernameInput,
                             onValueChange = { usernameInput = it },
-                            label = { Text("Ваш ник на FunPay (или название профиля)") },
-                            placeholder = { Text("Например: TopSeller_RU") },
+                            label = { Text("Ник на FunPay") },
                             singleLine = true,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("account_username_input"),
-                            shape = RoundedCornerShape(14.dp)
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = TextWhite,
+                                unfocusedTextColor = TextWhite
+                            )
                         )
-
                         OutlinedTextField(
                             value = goldenKeyInput,
                             onValueChange = { goldenKeyInput = it },
-                            label = { Text("Cookie golden_key (32 символа из браузера)") },
-                            placeholder = { Text("Например: a8f9c2d1e4b709123456789abcdef012") },
-                            singleLine = true,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("account_golden_key_input"),
-                            shape = RoundedCornerShape(14.dp)
-                        )
-
-                        OutlinedTextField(
-                            value = userAgentInput,
-                            onValueChange = { userAgentInput = it },
-                            label = { Text("User-Agent (для обхода блокировок сессии)") },
+                            label = { Text("golden_key (cookie)") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(14.dp)
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Где взять golden_key на FunPay?",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = GlassPrimary,
-                                modifier = Modifier.clickable { showCookieGuide = !showCookieGuide }
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = TextWhite,
+                                unfocusedTextColor = TextWhite
                             )
-
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                OutlinedButton(
-                                    onClick = {
-                                        usernameInput = "CrystalSeller_FP"
-                                        goldenKeyInput = "fp98a7c6b5d4e3f2109876543210abcd"
-                                    },
-                                    shape = RoundedCornerShape(12.dp)
-                                ) {
-                                    Text("Демо-ключ", fontSize = 12.sp)
-                                }
-
-                                Button(
-                                    onClick = {
-                                        onConnectAccount(usernameInput, goldenKeyInput, userAgentInput)
-                                        if (goldenKeyInput.trim().length >= 16) {
-                                            showAddAccountForm = false
-                                        }
-                                    },
-                                    enabled = !isBusy,
-                                    modifier = Modifier.testTag("connect_account_submit_button"),
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = GlassPrimary)
-                                ) {
-                                    Text("Подключить аккаунт", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                        }
-
-                        AnimatedVisibility(visible = showCookieGuide) {
-                            Surface(
-                                shape = RoundedCornerShape(14.dp),
-                                color = Color(0xFFEFF6FF),
-                                border = BorderStroke(1.dp, Color(0xFFBFDBFE))
-                            ) {
-                                Column(modifier = Modifier.padding(12.dp)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.Info,
-                                            contentDescription = null,
-                                            tint = GlassPrimary,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(
-                                            text = "Инструкция получения golden_key за 30 секунд:",
-                                            style = MaterialTheme.typography.labelLarge,
-                                            color = TextSlateDark
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = "1. Откройте сайт funpay.com в браузере (Chrome / Kiwi Browser / ПК) и войдите в аккаунт.\n" +
-                                            "2. Нажмите F12 (DevTools) → вкладка Application → Cookies → https://funpay.com.\n" +
-                                            "3. Скопируйте значение (Value) строки golden_key (32 символа) и вставьте выше.\n" +
-                                            "4. Старый смартфон будет держать сессию онлайн 24/7 и поднимать лоты автоматически!",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontSize = 12.sp,
-                                        color = TextSlateMedium
-                                    )
-                                }
-                            }
+                        )
+                        Button(
+                            onClick = {
+                                onConnectAccount(usernameInput, goldenKeyInput, userAgentInput)
+                                showManualKeyForm = false
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = NeonCyan, contentColor = Color.Black)
+                        ) {
+                            Text("Подключить по ключу", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
             }
         }
 
-        // 3. Automation Modules Quick Overview Cards
+        // 3. Modules Shortcuts
         item {
-            FrostedGlassCard {
+            DarkNeonGlassCard {
                 Text(
-                    text = "Активные модули автоматизации",
+                    text = "Модули автоматизации",
                     style = MaterialTheme.typography.titleMedium,
-                    color = TextSlateDark
+                    fontWeight = FontWeight.Bold,
+                    color = TextWhite
                 )
                 Spacer(modifier = Modifier.height(10.dp))
 
-                ModuleSummaryRow(
+                DarkModuleRow(
                     icon = Icons.Default.Bolt,
-                    title = "Автоподнятие лотов и Вечный Онлайн",
-                    subtitle = "Включено разделов: ${lotCategories.count { it.isAutoRaiseEnabled }} из ${lotCategories.size}",
+                    title = "Автоподнятие лотов 24/7",
+                    subtitle = "Активных категорий: ${lotCategories.count { it.isAutoRaiseEnabled }}",
                     checked = settings.isAutoRaiseMasterEnabled,
                     onClick = { onNavigateToTab(1) }
                 )
 
-                ModuleSummaryRow(
+                DarkModuleRow(
                     icon = Icons.Default.CheckCircle,
-                    title = "Автоответчик и Приветствие новых покупателей",
-                    subtitle = if (settings.isGreetingEnabled) "Приветствие активно + умные ключевые слова" else "Только ответы по ключевым словам",
+                    title = "Автоответчик и Приветствие",
+                    subtitle = if (settings.isGreetingEnabled) "Приветствие включено" else "Только ключевые слова",
                     checked = settings.isGreetingEnabled,
                     onClick = { onNavigateToTab(2) }
                 )
 
-                ModuleSummaryRow(
+                DarkModuleRow(
                     icon = Icons.Default.SupportAgent,
-                    title = "Просьба отзыва, Автоответ на отзывы и Автотикет в ТП (>24ч)",
-                    subtitle = "Неподтвержденных > ${settings.unconfirmedThresholdHours}ч: $unconfirmedOver24hCount шт. • Тикетов в ТП: $totalTicketsSent",
+                    title = "Отзывы и Автотикет в ТП (>24ч)",
+                    subtitle = "Заказов без подтверждения >24ч: $unconfirmedOver24hCount",
                     checked = settings.isAutoTicketTpEnabled,
                     onClick = { onNavigateToTab(3) }
                 )
 
-                ModuleSummaryRow(
+                DarkModuleRow(
                     icon = Icons.Default.NotificationsActive,
-                    title = "Telegram Уведомления + Сервер 24/7 (Старый девайс)",
-                    subtitle = if (settings.isTelegramEnabled && settings.telegramBotToken.isNotBlank()) {
-                        "Бот подключен (Chat ID: ${settings.telegramChatId})"
-                    } else {
-                        "Настройте Bot Token и Chat ID для мгновенных отчетов"
-                    },
+                    title = "Telegram & Сервер 24/7 (Старый телефон)",
+                    subtitle = if (settings.isTelegramEnabled) "Telegram активен" else "Нажмите для настройки",
                     checked = settings.isTelegramEnabled,
                     onClick = { onNavigateToTab(4) }
                 )
@@ -531,7 +477,7 @@ fun DashboardScreen(
 }
 
 @Composable
-private fun ModuleSummaryRow(
+private fun DarkModuleRow(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
     subtitle: String,
@@ -541,12 +487,12 @@ private fun ModuleSummaryRow(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 5.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .padding(vertical = 4.dp)
+            .clip(RoundedCornerShape(14.dp))
             .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        color = Color(0xB3FFFFFF),
-        border = BorderStroke(1.dp, Color.White)
+        shape = RoundedCornerShape(14.dp),
+        color = Color(0xFF0C131D),
+        border = BorderStroke(1.dp, Color(0x3338BDF8))
     ) {
         Row(
             modifier = Modifier
@@ -562,39 +508,26 @@ private fun ModuleSummaryRow(
                 Box(
                     modifier = Modifier
                         .size(38.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(GlassPrimary.copy(alpha = 0.12f)),
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFF132235)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = GlassPrimary,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    Icon(imageVector = icon, contentDescription = null, tint = NeonCyan, modifier = Modifier.size(20.dp))
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontSize = 14.sp,
-                        color = TextSlateDark
-                    )
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontSize = 12.sp,
-                        color = TextSlateMuted
-                    )
+                    Text(text = title, style = MaterialTheme.typography.titleMedium, fontSize = 14.sp, color = TextWhite)
+                    Text(text = subtitle, style = MaterialTheme.typography.bodyMedium, fontSize = 12.sp, color = TextDim)
                 }
             }
             Switch(
                 checked = checked,
                 onCheckedChange = { onClick() },
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = GlassAccentMint
+                    checkedThumbColor = Color.Black,
+                    checkedTrackColor = NeonEmerald,
+                    uncheckedThumbColor = TextDim,
+                    uncheckedTrackColor = Color(0xFF1E293B)
                 )
             )
         }

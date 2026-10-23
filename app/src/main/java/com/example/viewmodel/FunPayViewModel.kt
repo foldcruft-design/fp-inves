@@ -88,6 +88,15 @@ class FunPayViewModel(application: Application) : AndroidViewModel(application) 
         _statusBannerMessage.value = msg
     }
 
+    fun loginWithGoogle(userName: String = "FunPay Master", email: String = "trader@gmail.com") {
+        viewModelScope.launch {
+            _isBusy.value = true
+            val (ok, msg) = repository.loginWithGoogleOneClick(userName, email)
+            _isBusy.value = false
+            showBanner(if (ok) "✨ $msg" else "⚠️ $msg")
+        }
+    }
+
     // Account actions
     fun connectFunPayAccount(username: String, goldenKey: String, userAgent: String) {
         viewModelScope.launch {

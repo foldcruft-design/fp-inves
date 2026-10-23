@@ -10,9 +10,14 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -71,18 +76,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.ui.components.GlassStatusBadge
-import com.example.ui.components.LightGlassMeshBackground
+import com.example.ui.components.DarkNeonStatusBadge
+import com.example.ui.components.DeepDarkCyberBackground
 import com.example.ui.screens.AutoReplyAndGreetingScreen
 import com.example.ui.screens.DashboardScreen
 import com.example.ui.screens.LotsAutoRaiseScreen
 import com.example.ui.screens.OrdersReviewsTicketsScreen
 import com.example.ui.screens.TelegramAndServerScreen
 import com.example.ui.theme.FPGlassHelperTheme
-import com.example.ui.theme.GlassAccentMint
-import com.example.ui.theme.GlassPrimary
-import com.example.ui.theme.TextSlateDark
-import com.example.ui.theme.TextSlateMuted
+import com.example.ui.theme.NeonCyan
+import com.example.ui.theme.NeonEmerald
+import com.example.ui.theme.TextDim
+import com.example.ui.theme.TextWhite
 import com.example.viewmodel.FunPayViewModel
 import kotlinx.coroutines.delay
 
@@ -131,31 +136,25 @@ fun FPGlassMainApp(
 
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
 
-    // Keep screen awake when configured for old-device 24/7 server mode
     DisposableEffect(settings.isKeepScreenAwake) {
         onUpdateKeepScreenOn(settings.isKeepScreenAwake)
         onDispose { }
     }
 
-    // Request POST_NOTIFICATIONS permission on Android 13+ when starting 24/7 foreground session
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { }
     )
-    val context = LocalContext.current
 
-    // Auto-dismiss banner after 4.5 seconds
     LaunchedEffect(statusBanner) {
         if (statusBanner != null) {
-            delay(4500L)
+            delay(4000L)
             viewModel.dismissBanner()
         }
     }
 
     if (selectedTab != 0) {
-        BackHandler {
-            selectedTab = 0
-        }
+        BackHandler { selectedTab = 0 }
     }
 
     val navItems = listOf(
@@ -196,7 +195,7 @@ fun FPGlassMainApp(
         )
     )
 
-    LightGlassMeshBackground {
+    DeepDarkCyberBackground {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = Color.Transparent,
@@ -206,11 +205,11 @@ fun FPGlassMainApp(
                     modifier = Modifier
                         .fillMaxWidth()
                         .windowInsetsPadding(WindowInsets.statusBars)
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    color = Color(0xD9FFFFFF),
-                    border = BorderStroke(1.dp, Color.White),
-                    shadowElevation = 4.dp
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    color = Color(0xF20B111A),
+                    border = BorderStroke(1.dp, Color(0x3338BDF8)),
+                    shadowElevation = 6.dp
                 ) {
                     Row(
                         modifier = Modifier
@@ -221,27 +220,27 @@ fun FPGlassMainApp(
                     ) {
                         Column {
                             Text(
-                                text = "FP GlassHelper",
+                                text = "FP Cyber Helper",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = TextSlateDark
+                                color = TextWhite
                             )
                             val activeAcc = accounts.firstOrNull { it.isActive } ?: accounts.firstOrNull()
                             Text(
                                 text = if (activeAcc != null) {
-                                    "Аккаунт: ${activeAcc.username} • ID ${activeAcc.userId}"
+                                    "${activeAcc.username} • Баланс: ${activeAcc.balanceRub.toInt()} ₽"
                                 } else {
-                                    "Автоматизация FunPay • Сессия 24/7"
+                                    "Google Вход активен • Сессия 24/7"
                                 },
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontSize = 11.sp,
-                                color = TextSlateMuted
+                                color = NeonCyan
                             )
                         }
 
-                        GlassStatusBadge(
-                            text = if (settings.isSessionLoopRunning) "ОНЛАЙН 24/7" else "ГОТОВ",
-                            color = if (settings.isSessionLoopRunning) GlassAccentMint else GlassPrimary,
+                        DarkNeonStatusBadge(
+                            text = if (settings.isSessionLoopRunning) "СЕССИЯ 24/7" else "ОНЛАЙН",
+                            color = if (settings.isSessionLoopRunning) NeonEmerald else NeonCyan,
                             modifier = Modifier.clickable {
                                 if (!settings.isSessionLoopRunning && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                     notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -257,11 +256,11 @@ fun FPGlassMainApp(
                     modifier = Modifier
                         .fillMaxWidth()
                         .windowInsetsPadding(WindowInsets.navigationBars)
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                    shape = RoundedCornerShape(24.dp),
-                    color = Color(0xEBFFFFFF),
-                    border = BorderStroke(1.2.dp, Color.White),
-                    shadowElevation = 8.dp
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    shape = RoundedCornerShape(22.dp),
+                    color = Color(0xF50D1522),
+                    border = BorderStroke(1.dp, Color(0x4038BDF8)),
+                    shadowElevation = 10.dp
                 ) {
                     NavigationBar(
                         containerColor = Color.Transparent,
@@ -288,11 +287,11 @@ fun FPGlassMainApp(
                                     )
                                 },
                                 colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = GlassPrimary,
-                                    selectedTextColor = GlassPrimary,
-                                    indicatorColor = Color(0xFFE0F2FE),
-                                    unselectedIconColor = TextSlateMuted,
-                                    unselectedTextColor = TextSlateMuted
+                                    selectedIconColor = NeonCyan,
+                                    selectedTextColor = NeonCyan,
+                                    indicatorColor = Color(0xFF132B45),
+                                    unselectedIconColor = TextDim,
+                                    unselectedTextColor = TextDim
                                 )
                             )
                         }
@@ -305,89 +304,103 @@ fun FPGlassMainApp(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                when (selectedTab) {
-                    0 -> DashboardScreen(
-                        accounts = accounts,
-                        lotCategories = lotCategories,
-                        orders = orders,
-                        settings = settings,
-                        isBusy = isBusy,
-                        onConnectAccount = { user, key, ua ->
-                            viewModel.connectFunPayAccount(user, key, ua)
-                        },
-                        onSwitchAccount = { viewModel.switchActiveAccount(it) },
-                        onDeleteAccount = { viewModel.deleteAccount(it) },
-                        onToggleSession24x7 = { enable ->
-                            if (enable && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            }
-                            viewModel.toggle24x7SessionServer(enable)
-                        },
-                        onRaiseAllNow = { viewModel.raiseAllCategoriesNow() },
-                        onScanOverdueOrdersNow = { viewModel.runScanOverdueOrdersForTp() },
-                        onNavigateToTab = { selectedTab = it }
-                    )
-
-                    1 -> LotsAutoRaiseScreen(
-                        lotCategories = lotCategories,
-                        settings = settings,
-                        isBusy = isBusy,
-                        onUpdateSettings = { viewModel.saveAutomationSettings(it) },
-                        onAddCategory = { gId, nId, title, gName, count, interval ->
-                            viewModel.addLotCategory(gId, nId, title, gName, count, interval)
-                        },
-                        onToggleCategory = { cat, en -> viewModel.toggleCategoryRaise(cat, en) },
-                        onDeleteCategory = { viewModel.deleteCategory(it) },
-                        onRaiseSingleNow = { viewModel.raiseSingleCategoryNow(it) },
-                        onRaiseAllNow = { viewModel.raiseAllCategoriesNow() }
-                    )
-
-                    2 -> AutoReplyAndGreetingScreen(
-                        settings = settings,
-                        rules = autoReplyRules,
-                        simulatorReplies = simulatorReplies,
-                        onSaveSettings = { viewModel.saveAutomationSettings(it) },
-                        onSaveRule = { viewModel.saveAutoReplyRule(it) },
-                        onToggleRule = { rule, en -> viewModel.toggleAutoReplyRule(rule, en) },
-                        onDeleteRule = { viewModel.deleteAutoReplyRule(it) },
-                        onTestChatMessage = { buyer, msg, lot, isFirst ->
-                            viewModel.testIncomingBuyerMessage(buyer, msg, lot, isFirst)
-                        },
-                        onPreviewTemplate = { viewModel.previewTemplate(it) }
-                    )
-
-                    3 -> OrdersReviewsTicketsScreen(
-                        orders = orders,
-                        settings = settings,
-                        isBusy = isBusy,
-                        onSaveSettings = { viewModel.saveAutomationSettings(it) },
-                        onConfirmOrderAndReview = { viewModel.confirmOrderWithReviewAutomation(it) },
-                        onSendTicketToTp = { viewModel.sendAutoTicketToSupportNow(it) },
-                        onScanAllOverdueOrdersForTp = { viewModel.runScanOverdueOrdersForTp() },
-                        onCreateTestOrder = { buyer, lot, price, hours ->
-                            viewModel.createSampleOrder(buyer, lot, price, hours)
+                // Animated Screen Transitions
+                AnimatedContent(
+                    targetState = selectedTab,
+                    transitionSpec = {
+                        if (targetState > initialState) {
+                            (slideInHorizontally(animationSpec = tween(280)) { width -> width } + fadeIn(animationSpec = tween(280)))
+                                .togetherWith(slideOutHorizontally(animationSpec = tween(280)) { width -> -width } + fadeOut(animationSpec = tween(280)))
+                        } else {
+                            (slideInHorizontally(animationSpec = tween(280)) { width -> -width } + fadeIn(animationSpec = tween(280)))
+                                .togetherWith(slideOutHorizontally(animationSpec = tween(280)) { width -> width } + fadeOut(animationSpec = tween(280)))
                         }
-                    )
+                    },
+                    label = "tab_crossfade"
+                ) { targetTab ->
+                    when (targetTab) {
+                        0 -> DashboardScreen(
+                            accounts = accounts,
+                            lotCategories = lotCategories,
+                            orders = orders,
+                            settings = settings,
+                            isBusy = isBusy,
+                            onLoginGoogle = { name, email -> viewModel.loginWithGoogle(name, email) },
+                            onConnectAccount = { user, key, ua -> viewModel.connectFunPayAccount(user, key, ua) },
+                            onSwitchAccount = { viewModel.switchActiveAccount(it) },
+                            onDeleteAccount = { viewModel.deleteAccount(it) },
+                            onToggleSession24x7 = { enable ->
+                                if (enable && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                }
+                                viewModel.toggle24x7SessionServer(enable)
+                            },
+                            onRaiseAllNow = { viewModel.raiseAllCategoriesNow() },
+                            onScanOverdueOrdersNow = { viewModel.runScanOverdueOrdersForTp() },
+                            onNavigateToTab = { selectedTab = it }
+                        )
 
-                    4 -> TelegramAndServerScreen(
-                        settings = settings,
-                        logs = logs,
-                        isBusy = isBusy,
-                        onSaveSettings = { viewModel.saveAutomationSettings(it) },
-                        onToggleSession24x7 = { enable ->
-                            if (enable && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        1 -> LotsAutoRaiseScreen(
+                            lotCategories = lotCategories,
+                            settings = settings,
+                            isBusy = isBusy,
+                            onUpdateSettings = { viewModel.saveAutomationSettings(it) },
+                            onAddCategory = { gId, nId, title, gName, count, interval ->
+                                viewModel.addLotCategory(gId, nId, title, gName, count, interval)
+                            },
+                            onToggleCategory = { cat, en -> viewModel.toggleCategoryRaise(cat, en) },
+                            onDeleteCategory = { viewModel.deleteCategory(it) },
+                            onRaiseSingleNow = { viewModel.raiseSingleCategoryNow(it) },
+                            onRaiseAllNow = { viewModel.raiseAllCategoriesNow() }
+                        )
+
+                        2 -> AutoReplyAndGreetingScreen(
+                            settings = settings,
+                            rules = autoReplyRules,
+                            simulatorReplies = simulatorReplies,
+                            onSaveSettings = { viewModel.saveAutomationSettings(it) },
+                            onSaveRule = { viewModel.saveAutoReplyRule(it) },
+                            onToggleRule = { rule, en -> viewModel.toggleAutoReplyRule(rule, en) },
+                            onDeleteRule = { viewModel.deleteAutoReplyRule(it) },
+                            onTestChatMessage = { buyer, msg, lot, isFirst ->
+                                viewModel.testIncomingBuyerMessage(buyer, msg, lot, isFirst)
+                            },
+                            onPreviewTemplate = { viewModel.previewTemplate(it) }
+                        )
+
+                        3 -> OrdersReviewsTicketsScreen(
+                            orders = orders,
+                            settings = settings,
+                            isBusy = isBusy,
+                            onSaveSettings = { viewModel.saveAutomationSettings(it) },
+                            onConfirmOrderAndReview = { viewModel.confirmOrderWithReviewAutomation(it) },
+                            onSendTicketToTp = { viewModel.sendAutoTicketToSupportNow(it) },
+                            onScanAllOverdueOrdersForTp = { viewModel.runScanOverdueOrdersForTp() },
+                            onCreateTestOrder = { buyer, lot, price, hours ->
+                                viewModel.createSampleOrder(buyer, lot, price, hours)
                             }
-                            viewModel.toggle24x7SessionServer(enable)
-                        },
-                        onTestTelegram = { token, chat ->
-                            viewModel.testTelegramNotification(token, chat)
-                        },
-                        onClearLogs = { viewModel.clearLogs() }
-                    )
+                        )
+
+                        4 -> TelegramAndServerScreen(
+                            settings = settings,
+                            logs = logs,
+                            isBusy = isBusy,
+                            onSaveSettings = { viewModel.saveAutomationSettings(it) },
+                            onToggleSession24x7 = { enable ->
+                                if (enable && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                }
+                                viewModel.toggle24x7SessionServer(enable)
+                            },
+                            onTestTelegram = { token, chat ->
+                                viewModel.testTelegramNotification(token, chat)
+                            },
+                            onClearLogs = { viewModel.clearLogs() }
+                        )
+                    }
                 }
 
-                // Floating Glass Notification Banner at the top of the screen
+                // Floating Banner
                 AnimatedVisibility(
                     visible = statusBanner != null,
                     enter = fadeIn(),
@@ -397,9 +410,9 @@ fun FPGlassMainApp(
                         .padding(horizontal = 16.dp, vertical = 6.dp)
                 ) {
                     Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        color = Color(0xF50F172A),
-                        border = BorderStroke(1.dp, GlassPrimary),
+                        shape = RoundedCornerShape(14.dp),
+                        color = Color(0xF20F1E2E),
+                        border = BorderStroke(1.dp, NeonCyan),
                         shadowElevation = 8.dp
                     ) {
                         Row(
@@ -412,7 +425,7 @@ fun FPGlassMainApp(
                             Text(
                                 text = statusBanner.orEmpty(),
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = Color.White,
+                                color = TextWhite,
                                 modifier = Modifier.weight(1f)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -423,7 +436,7 @@ fun FPGlassMainApp(
                                 Icon(
                                     imageVector = Icons.Default.Close,
                                     contentDescription = "Закрыть",
-                                    tint = Color.White,
+                                    tint = TextWhite,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }

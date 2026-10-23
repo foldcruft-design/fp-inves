@@ -28,6 +28,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -46,15 +47,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.AutomationSettingsEntity
 import com.example.data.LotCategoryEntity
-import com.example.ui.components.FrostedGlassCard
-import com.example.ui.components.GlassStatusBadge
-import com.example.ui.theme.GlassAccentDanger
-import com.example.ui.theme.GlassAccentMint
-import com.example.ui.theme.GlassPrimary
+import com.example.ui.components.DarkNeonGlassCard
+import com.example.ui.components.DarkNeonStatusBadge
+import com.example.ui.theme.DarkBorder
 import com.example.ui.theme.JetBrainsMonoFontFamily
-import com.example.ui.theme.TextSlateDark
-import com.example.ui.theme.TextSlateMedium
-import com.example.ui.theme.TextSlateMuted
+import com.example.ui.theme.NeonCoral
+import com.example.ui.theme.NeonCyan
+import com.example.ui.theme.NeonEmerald
+import com.example.ui.theme.TextCyan
+import com.example.ui.theme.TextDim
+import com.example.ui.theme.TextLight
+import com.example.ui.theme.TextWhite
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -88,29 +91,30 @@ fun LotsAutoRaiseScreen(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        // Master Auto-Raise & Eternal Online Card
+        // Master Auto-Raise Switch
         item {
-            FrostedGlassCard(elevated = true, accentBorderColor = GlassPrimary) {
+            DarkNeonGlassCard(elevated = true, accentBorderColor = NeonCyan) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        GlassStatusBadge(
-                            text = if (settings.isAutoRaiseMasterEnabled) "АВТОПОДНЯТИЕ АКТИВНО" else "НА ПАУЗЕ",
-                            color = if (settings.isAutoRaiseMasterEnabled) GlassAccentMint else TextSlateMuted
+                        DarkNeonStatusBadge(
+                            text = if (settings.isAutoRaiseMasterEnabled) "АВТОПОДНЯТИЕ 24/7 ВКЛЮЧЕНО" else "ПАУЗА",
+                            color = if (settings.isAutoRaiseMasterEnabled) NeonEmerald else TextDim
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "Поднятие лотов в ТОП 24/7",
+                            text = "Поднятие лотов в ТОП",
                             style = MaterialTheme.typography.titleLarge,
-                            color = TextSlateDark
+                            fontWeight = FontWeight.Bold,
+                            color = TextWhite
                         )
                         Text(
-                            text = "Автоматическая отправка POST /lots/raise по таймеру каждого раздела + поддержание статуса Онлайн",
+                            text = "Авто-вызов /lots/raise по расписанию для каждой игры",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = TextSlateMedium
+                            color = TextLight
                         )
                     }
                     Switch(
@@ -118,10 +122,11 @@ fun LotsAutoRaiseScreen(
                         onCheckedChange = {
                             onUpdateSettings(settings.copy(isAutoRaiseMasterEnabled = it))
                         },
-                        modifier = Modifier.testTag("master_auto_raise_switch"),
                         colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
-                            checkedTrackColor = GlassAccentMint
+                            checkedThumbColor = Color.Black,
+                            checkedTrackColor = NeonEmerald,
+                            uncheckedThumbColor = TextDim,
+                            uncheckedTrackColor = Color(0xFF1E293B)
                         )
                     )
                 }
@@ -137,149 +142,94 @@ fun LotsAutoRaiseScreen(
                         enabled = !isBusy,
                         modifier = Modifier
                             .weight(1f)
-                            .height(48.dp)
-                            .testTag("raise_all_lots_button"),
+                            .height(48.dp),
                         shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = GlassPrimary)
+                        colors = ButtonDefaults.buttonColors(containerColor = NeonCyan, contentColor = Color.Black)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.RocketLaunch,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
+                        Icon(imageVector = Icons.Default.RocketLaunch, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Поднять все сейчас", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text("Поднять все сейчас", fontWeight = FontWeight.Bold)
                     }
 
                     OutlinedButton(
                         onClick = { showAddDialog = !showAddDialog },
-                        modifier = Modifier
-                            .height(48.dp)
-                            .testTag("add_lot_category_button"),
+                        modifier = Modifier.height(48.dp),
                         shape = RoundedCornerShape(14.dp),
-                        border = BorderStroke(1.2.dp, GlassPrimary)
+                        border = BorderStroke(1.dp, NeonCyan)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Добавить раздел",
-                            tint = GlassPrimary
-                        )
+                        Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = NeonCyan)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Раздел", color = GlassPrimary, fontWeight = FontWeight.Bold)
+                        Text("Раздел", color = NeonCyan, fontWeight = FontWeight.Bold)
                     }
                 }
 
-                // Add New Lot Category Form
                 AnimatedVisibility(visible = showAddDialog) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 14.dp),
+                            .padding(top = 12.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
-                            text = "Добавить категорию / раздел FunPay для автоподнятия",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = TextSlateDark
-                        )
                         OutlinedTextField(
                             value = gameName,
                             onValueChange = { gameName = it },
-                            label = { Text("Название игры (например: Dota 2 / Roblox)") },
+                            label = { Text("Игра (напр. Dota 2, CS2, WoW)") },
                             singleLine = true,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("lot_game_name_input"),
-                            shape = RoundedCornerShape(12.dp)
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextWhite, unfocusedTextColor = TextWhite)
                         )
                         OutlinedTextField(
                             value = categoryTitle,
                             onValueChange = { categoryTitle = it },
-                            label = { Text("Раздел (например: Предметы / Аккаунты / Буст)") },
+                            label = { Text("Название раздела (Предметы / Валюта)") },
                             singleLine = true,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("lot_category_title_input"),
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                        Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextWhite, unfocusedTextColor = TextWhite)
+                        )
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             OutlinedTextField(
                                 value = gameId,
                                 onValueChange = { gameId = it },
                                 label = { Text("game_id") },
-                                placeholder = { Text("142") },
-                                singleLine = true,
                                 modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextWhite, unfocusedTextColor = TextWhite)
                             )
                             OutlinedTextField(
                                 value = nodeId,
                                 onValueChange = { nodeId = it },
                                 label = { Text("node_id") },
-                                placeholder = { Text("2840") },
-                                singleLine = true,
                                 modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextWhite, unfocusedTextColor = TextWhite)
                             )
                         }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            OutlinedTextField(
-                                value = lotsCountStr,
-                                onValueChange = { lotsCountStr = it },
-                                label = { Text("Кол-во лотов") },
-                                singleLine = true,
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                            OutlinedTextField(
-                                value = intervalMinStr,
-                                onValueChange = { intervalMinStr = it },
-                                label = { Text("Интервал (мин)") },
-                                singleLine = true,
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                        }
-
                         Button(
                             onClick = {
-                                onAddCategory(
-                                    gameId,
-                                    nodeId,
-                                    categoryTitle,
-                                    gameName,
-                                    lotsCountStr.toIntOrNull() ?: 5,
-                                    intervalMinStr.toIntOrNull() ?: 180
-                                )
+                                onAddCategory(gameId, nodeId, categoryTitle, gameName, lotsCountStr.toIntOrNull() ?: 5, intervalMinStr.toIntOrNull() ?: 180)
                                 gameName = ""
                                 categoryTitle = ""
                                 gameId = ""
                                 nodeId = ""
                                 showAddDialog = false
                             },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("save_lot_category_button"),
+                            modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = GlassPrimary)
+                            colors = ButtonDefaults.buttonColors(containerColor = NeonCyan, contentColor = Color.Black)
                         ) {
-                            Text("Сохранить в очередь автоподнятия", fontWeight = FontWeight.Bold)
+                            Text("Сохранить категорию", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
             }
         }
 
-        // Individual Lot Categories List
+        // List of categories
         items(lotCategories, key = { it.id }) { category ->
-            FrostedGlassCard(
-                accentBorderColor = if (category.isAutoRaiseEnabled) GlassPrimary else null
+            DarkNeonGlassCard(
+                accentBorderColor = if (category.isAutoRaiseEnabled) NeonCyan else null
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -287,42 +237,34 @@ fun LotsAutoRaiseScreen(
                     verticalAlignment = Alignment.Top
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
+                        Text(text = category.gameName, style = MaterialTheme.typography.labelLarge, color = TextCyan)
+                        Text(text = category.title, style = MaterialTheme.typography.titleMedium, fontSize = 16.sp, color = TextWhite)
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = category.gameName,
-                            style = MaterialTheme.typography.labelLarge,
-                            color = GlassPrimary
-                        )
-                        Text(
-                            text = category.title,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontSize = 17.sp,
-                            color = TextSlateDark
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "game_id=${category.gameId} • node_id=${category.nodeId} • Лотов: ${category.lotsCount} шт.",
+                            text = "node_id=${category.nodeId} • Лотов: ${category.lotsCount} шт.",
                             fontFamily = JetBrainsMonoFontFamily,
                             fontSize = 11.sp,
-                            color = TextSlateMuted
+                            color = TextDim
                         )
                     }
-
                     Switch(
                         checked = category.isAutoRaiseEnabled,
                         onCheckedChange = { onToggleCategory(category, it) },
                         colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
-                            checkedTrackColor = GlassAccentMint
+                            checkedThumbColor = Color.Black,
+                            checkedTrackColor = NeonEmerald,
+                            uncheckedThumbColor = TextDim,
+                            uncheckedTrackColor = Color(0xFF1E293B)
                         )
                     )
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = Color(0xD9F8FAFC),
-                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFF090E16),
+                    border = BorderStroke(1.dp, Color(0x3338BDF8))
                 ) {
                     Row(
                         modifier = Modifier
@@ -332,45 +274,16 @@ fun LotsAutoRaiseScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Schedule,
-                                contentDescription = null,
-                                tint = GlassPrimary,
-                                modifier = Modifier.size(16.dp)
-                            )
+                            Icon(imageVector = Icons.Default.Schedule, contentDescription = null, tint = NeonCyan, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            val lastTimeStr = if (category.lastRaisedAt > 0) {
-                                timeFormat.format(Date(category.lastRaisedAt))
-                            } else {
-                                "Еще не поднимался"
-                            }
-                            Text(
-                                text = "Посл.: $lastTimeStr • Поднятий: ${category.totalRaisesCount}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontSize = 12.sp,
-                                color = TextSlateMedium
-                            )
+                            val lastTime = if (category.lastRaisedAt > 0) timeFormat.format(Date(category.lastRaisedAt)) else "Не поднимался"
+                            Text(text = "Посл.: $lastTime • Поднятий: ${category.totalRaisesCount}", style = MaterialTheme.typography.bodyMedium, fontSize = 12.sp, color = TextLight)
                         }
-
-                        Text(
-                            text = "Каждые ${category.intervalMinutes} мин",
-                            fontFamily = JetBrainsMonoFontFamily,
-                            fontSize = 11.sp,
-                            color = GlassPrimary,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text(text = "Каждые ${category.intervalMinutes} мин", fontFamily = JetBrainsMonoFontFamily, fontSize = 11.sp, color = NeonCyan)
                     }
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Статус: ${category.lastStatusMessage}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontSize = 12.sp,
-                    color = TextSlateMuted
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -381,24 +294,13 @@ fun LotsAutoRaiseScreen(
                         onClick = { onRaiseSingleNow(category) },
                         enabled = !isBusy,
                         shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, GlassPrimary)
+                        border = BorderStroke(1.dp, NeonCyan)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.RocketLaunch,
-                            contentDescription = null,
-                            tint = GlassPrimary,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Поднять вне очереди", fontSize = 12.sp, color = GlassPrimary)
+                        Text("Поднять сейчас", color = NeonCyan, fontSize = 12.sp)
                     }
 
                     IconButton(onClick = { onDeleteCategory(category) }) {
-                        Icon(
-                            imageVector = Icons.Default.DeleteOutline,
-                            contentDescription = "Удалить раздел",
-                            tint = GlassAccentDanger
-                        )
+                        Icon(imageVector = Icons.Default.DeleteOutline, contentDescription = "Удалить", tint = NeonCoral)
                     }
                 }
             }
