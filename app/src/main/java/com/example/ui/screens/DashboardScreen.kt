@@ -2,8 +2,6 @@ package com.example.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,7 +25,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PowerSettingsNew
@@ -68,7 +67,6 @@ import com.example.ui.components.DarkMetricTile
 import com.example.ui.components.DarkNeonGlassCard
 import com.example.ui.components.DarkNeonStatusBadge
 import com.example.ui.components.GoogleLogoIcon
-import com.example.ui.theme.DarkBackgroundElevated
 import com.example.ui.theme.DarkBorder
 import com.example.ui.theme.GoogleBlue
 import com.example.ui.theme.JetBrainsMonoFontFamily
@@ -88,7 +86,8 @@ fun DashboardScreen(
     orders: List<FunPayOrderEntity>,
     settings: AutomationSettingsEntity,
     isBusy: Boolean,
-    onLoginGoogle: (String, String) -> Unit,
+    onOpenFunPayWebAuth: (targetUrl: String) -> Unit,
+    onLoginGoogleFast: (String, String) -> Unit,
     onConnectAccount: (String, String, String) -> Unit,
     onSwitchAccount: (FunPayAccountEntity) -> Unit,
     onDeleteAccount: (FunPayAccountEntity) -> Unit,
@@ -135,19 +134,26 @@ fun DashboardScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        DarkNeonStatusBadge(
-                            text = if (settings.isSessionLoopRunning) "СЕССИЯ 24/7 АКТИВНА" else "СЕССИЯ ОСТАНОВЛЕНА",
-                            color = if (settings.isSessionLoopRunning) NeonEmerald else TextDim
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            DarkNeonStatusBadge(
+                                text = if (settings.isSessionLoopRunning) "СЕССИЯ 24/7 АКТИВНА" else "СЕССИЯ ОСТАНОВЛЕНА",
+                                color = if (settings.isSessionLoopRunning) NeonEmerald else TextDim
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            DarkNeonStatusBadge(
+                                text = "БЕЗ ЛИМИТОВ (PRO)",
+                                color = NeonCyan
+                            )
+                        }
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "FunPay Cyber Helper",
+                            text = "FunPay Tools Pro",
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
                             color = TextWhite
                         )
                         Text(
-                            text = "Автоподнятие лотов • Автоответ • Автотикеты в ТП (>24ч) • Telegram",
+                            text = "Автоподнятие лотов • Автоответчик • Автотикеты в ТП (>24ч) • Сессии устройств",
                             style = MaterialTheme.typography.bodyMedium,
                             color = TextLight
                         )
@@ -254,7 +260,7 @@ fun DashboardScreen(
             }
         }
 
-        // 2. Google 1-Click Fast Connect & Accounts
+        // 2. Google Registration & FunPay Login in App (WebView Interceptor)
         item {
             DarkNeonGlassCard(accentBorderColor = GoogleBlue) {
                 Row(
@@ -267,13 +273,13 @@ fun DashboardScreen(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "Вход и привязка через Google",
+                                text = "Вход и Регистрация на FunPay через Google",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = TextWhite
                             )
                             Text(
-                                text = "Мгновенное подключение без сложного ввода cookie",
+                                text = "Переход на страницу регистрации FunPay с авто-захватом сессии",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontSize = 12.sp,
                                 color = TextLight
@@ -284,15 +290,16 @@ fun DashboardScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Large Google Sign-in Button
+                // Primary Registration / Login Button via Webview
                 Button(
                     onClick = {
-                        onLoginGoogle("Google Trader", "trader@gmail.com")
+                        // Open built-in browser directed to FunPay registration / Google login
+                        onOpenFunPayWebAuth("https://funpay.com/account/login")
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)
-                        .testTag("google_login_one_click_button"),
+                        .testTag("google_login_webview_button"),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF1E293B),
@@ -303,16 +310,38 @@ fun DashboardScreen(
                     GoogleLogoIcon(modifier = Modifier.size(22.dp))
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = "Войти через Google в 1 клик",
+                        text = "Войти / Зарегистрироваться на FunPay (через Google)",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = TextWhite
+                        color = TextWhite,
+                        fontSize = 13.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Direct Registration Link Button
+                OutlinedButton(
+                    onClick = {
+                        onOpenFunPayWebAuth("https://funpay.com/account/register")
+                    },
+                    modifier = Modifier.fillMaxWidth().height(44.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, NeonCyan)
+                ) {
+                    Icon(imageVector = Icons.Default.Language, contentDescription = null, tint = NeonCyan, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Открыть форму регистрации funpay.com/account/register",
+                        color = NeonCyan,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Existing Accounts List
+                // Existing Linked Accounts List
                 if (accounts.isNotEmpty()) {
                     accounts.forEach { acc ->
                         Surface(
@@ -351,7 +380,7 @@ fun DashboardScreen(
                                             color = TextWhite
                                         )
                                         Text(
-                                            text = "Баланс: ${acc.balanceRub.toInt()} ₽ • ${if (acc.isActive) "Активен" else "Нажмите для выбора"}",
+                                            text = "Баланс: ${acc.balanceRub.toInt()} ₽ • ${if (acc.isActive) "Активная сессия" else "Нажмите для выбора"}",
                                             fontFamily = JetBrainsMonoFontFamily,
                                             fontSize = 11.sp,
                                             color = if (acc.isActive) NeonCyan else TextDim
@@ -376,7 +405,7 @@ fun DashboardScreen(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = if (showManualKeyForm) "▲ Скрыть ручной ввод golden_key" else "▼ Или привязать через golden_key браузера",
+                    text = if (showManualKeyForm) "▲ Скрыть ручной ввод golden_key" else "▼ Или вставить ключ вручную / экспресс-вход",
                     style = MaterialTheme.typography.labelLarge,
                     color = TextCyan,
                     modifier = Modifier.clickable { showManualKeyForm = !showManualKeyForm }
@@ -413,37 +442,54 @@ fun DashboardScreen(
                                 unfocusedTextColor = TextWhite
                             )
                         )
-                        Button(
-                            onClick = {
-                                onConnectAccount(usernameInput, goldenKeyInput, userAgentInput)
-                                showManualKeyForm = false
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = NeonCyan, contentColor = Color.Black)
-                        ) {
-                            Text("Подключить по ключу", fontWeight = FontWeight.Bold)
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(
+                                onClick = { onLoginGoogleFast("Google Trader", "trader@gmail.com") },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, GoogleBlue)
+                            ) {
+                                Text("Экспресс-вход", fontSize = 12.sp, color = TextWhite)
+                            }
+                            Button(
+                                onClick = {
+                                    onConnectAccount(usernameInput, goldenKeyInput, userAgentInput)
+                                    showManualKeyForm = false
+                                },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = NeonCyan, contentColor = Color.Black)
+                            ) {
+                                Text("Сохранить", fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }
             }
         }
 
-        // 3. Modules Shortcuts
+        // 3. Modules Shortcuts & Device Sessions Info
         item {
             DarkNeonGlassCard {
-                Text(
-                    text = "Модули автоматизации",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = TextWhite
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Модули автоматизации (Без лимитов)",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = TextWhite
+                    )
+                    DarkNeonStatusBadge(text = "UNLIMITED", color = NeonEmerald)
+                }
                 Spacer(modifier = Modifier.height(10.dp))
 
                 DarkModuleRow(
                     icon = Icons.Default.Bolt,
                     title = "Автоподнятие лотов 24/7",
-                    subtitle = "Активных категорий: ${lotCategories.count { it.isAutoRaiseEnabled }}",
+                    subtitle = "Активных категорий: ${lotCategories.count { it.isAutoRaiseEnabled }} • Без лимита подъемов",
                     checked = settings.isAutoRaiseMasterEnabled,
                     onClick = { onNavigateToTab(1) }
                 )
@@ -459,16 +505,16 @@ fun DashboardScreen(
                 DarkModuleRow(
                     icon = Icons.Default.SupportAgent,
                     title = "Отзывы и Автотикет в ТП (>24ч)",
-                    subtitle = "Заказов без подтверждения >24ч: $unconfirmedOver24hCount",
+                    subtitle = "Заказов без подтверждения >24ч: $unconfirmedOver24hCount • Без ограничений",
                     checked = settings.isAutoTicketTpEnabled,
                     onClick = { onNavigateToTab(3) }
                 )
 
                 DarkModuleRow(
                     icon = Icons.Default.NotificationsActive,
-                    title = "Telegram & Сервер 24/7 (Старый телефон)",
-                    subtitle = if (settings.isTelegramEnabled) "Telegram активен" else "Нажмите для настройки",
-                    checked = settings.isTelegramEnabled,
+                    title = "Сессии устройств & Сервер 24/7 (Старый девайс)",
+                    subtitle = "Настройка задач для каждого старого смартфона и Telegram мост",
+                    checked = settings.isSessionLoopRunning,
                     onClick = { onNavigateToTab(4) }
                 )
             }

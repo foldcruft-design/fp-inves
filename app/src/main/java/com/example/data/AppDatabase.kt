@@ -33,6 +33,22 @@ interface FunPayDao {
     @Query("UPDATE funpay_accounts SET isActive = CASE WHEN id = :accountId THEN 1 ELSE 0 END")
     suspend fun setActiveAccount(accountId: Int)
 
+    // Device Nodes (Multi-Device 24/7 Session Automation without limits)
+    @Query("SELECT * FROM device_nodes ORDER BY id ASC")
+    fun getAllDeviceNodes(): Flow<List<DeviceNodeSessionEntity>>
+
+    @Query("SELECT * FROM device_nodes WHERE isSessionActive = 1")
+    suspend fun getActiveDeviceNodes(): List<DeviceNodeSessionEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDeviceNode(node: DeviceNodeSessionEntity): Long
+
+    @Update
+    suspend fun updateDeviceNode(node: DeviceNodeSessionEntity)
+
+    @Delete
+    suspend fun deleteDeviceNode(node: DeviceNodeSessionEntity)
+
     // Lot Categories
     @Query("SELECT * FROM lot_categories ORDER BY id ASC")
     fun getAllLotCategories(): Flow<List<LotCategoryEntity>>
@@ -105,13 +121,14 @@ interface FunPayDao {
 @Database(
     entities = [
         FunPayAccountEntity::class,
+        DeviceNodeSessionEntity::class,
         LotCategoryEntity::class,
         AutoReplyRuleEntity::class,
         FunPayOrderEntity::class,
         AutomationSettingsEntity::class,
         SessionLogEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

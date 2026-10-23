@@ -25,6 +25,7 @@ class FunPayViewModel(application: Application) : AndroidViewModel(application) 
     private val repository: FunPayRepository
 
     val accounts: StateFlow<List<FunPayAccountEntity>>
+    val deviceNodes: StateFlow<List<com.example.data.DeviceNodeSessionEntity>>
     val lotCategories: StateFlow<List<LotCategoryEntity>>
     val autoReplyRules: StateFlow<List<AutoReplyRuleEntity>>
     val orders: StateFlow<List<FunPayOrderEntity>>
@@ -45,6 +46,11 @@ class FunPayViewModel(application: Application) : AndroidViewModel(application) 
         repository = FunPayRepository(db.funPayDao())
 
         accounts = repository.accountsFlow.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            emptyList()
+        )
+        deviceNodes = repository.deviceNodesFlow.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
             emptyList()
@@ -94,6 +100,26 @@ class FunPayViewModel(application: Application) : AndroidViewModel(application) 
             val (ok, msg) = repository.loginWithGoogleOneClick(userName, email)
             _isBusy.value = false
             showBanner(if (ok) "✨ $msg" else "⚠️ $msg")
+        }
+    }
+
+    fun addDeviceNode(name: String, role: String) {
+        viewModelScope.launch {
+            repository.addDeviceNode(name, role)
+            showBanner("✨ Добавлено устройство-сессия: $name (Без лимитов)")
+        }
+    }
+
+    fun updateDeviceNode(node: com.example.data.DeviceNodeSessionEntity) {
+        viewModelScope.launch {
+            repository.updateDeviceNode(node)
+        }
+    }
+
+    fun deleteDeviceNode(node: com.example.data.DeviceNodeSessionEntity) {
+        viewModelScope.launch {
+            repository.deleteDeviceNode(node)
+            showBanner("Устройство ${node.deviceName} удалено")
         }
     }
 

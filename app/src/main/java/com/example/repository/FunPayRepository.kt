@@ -18,6 +18,7 @@ class FunPayRepository(
     private val client: FunPayAndTelegramClient = FunPayAndTelegramClient()
 ) {
     val accountsFlow: Flow<List<FunPayAccountEntity>> = dao.getAllAccounts()
+    val deviceNodesFlow: Flow<List<com.example.data.DeviceNodeSessionEntity>> = dao.getAllDeviceNodes()
     val lotCategoriesFlow: Flow<List<LotCategoryEntity>> = dao.getAllLotCategories()
     val autoReplyRulesFlow: Flow<List<AutoReplyRuleEntity>> = dao.getAllAutoReplyRules()
     val ordersFlow: Flow<List<FunPayOrderEntity>> = dao.getAllOrders()
@@ -158,6 +159,25 @@ class FunPayRepository(
                 )
             )
 
+            // Seed initial 24/7 dedicated device node session
+            dao.insertDeviceNode(
+                com.example.data.DeviceNodeSessionEntity(
+                    deviceName = "Старый смартфон #1 (Сервер-дока)",
+                    deviceRole = "Поднятие лотов + Автоответ + ТП тикеты (>24ч)",
+                    isSessionActive = true,
+                    taskAutoRaiseLots = true,
+                    taskAutoReplyChat = true,
+                    taskAutoGreeting = true,
+                    taskAutoReviews = true,
+                    taskAutoTpTickets = true,
+                    taskTelegramReports = true,
+                    pingIntervalSeconds = 30,
+                    lastHeartbeatTimestamp = System.currentTimeMillis(),
+                    batteryPct = 100,
+                    isPluggedIn = true
+                )
+            )
+
             dao.insertLog(
                 SessionLogEntity(
                     category = "SERVER",
@@ -187,6 +207,26 @@ class FunPayRepository(
             .replace("{stars}", stars)
             .replace("{hours_wait}", hoursWait)
             .replace("{time}", timeStr)
+    }
+
+    suspend fun addDeviceNode(name: String, role: String): Long {
+        val entity = com.example.data.DeviceNodeSessionEntity(
+            deviceName = name.ifBlank { "Серверное устройство" },
+            deviceRole = role.ifBlank { "Автоподнятие лотов и тикеты в ТП" },
+            isSessionActive = true
+        )
+        val id = dao.insertDeviceNode(entity)
+        logEvent("SERVER", "Добавлено устройство-сервер: $name", "Роль сессии: $role. Лимиты отключены (Безлимитный режим)", true)
+        return id
+    }
+
+    suspend fun updateDeviceNode(node: com.example.data.DeviceNodeSessionEntity) {
+        dao.updateDeviceNode(node)
+    }
+
+    suspend fun deleteDeviceNode(node: com.example.data.DeviceNodeSessionEntity) {
+        dao.deleteDeviceNode(node)
+        logEvent("SERVER", "Удалено устройство-сервер", node.deviceName, true)
     }
 
     suspend fun loginWithGoogleOneClick(

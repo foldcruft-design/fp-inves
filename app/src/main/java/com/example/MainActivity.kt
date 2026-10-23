@@ -62,6 +62,8 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -78,6 +80,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.components.DarkNeonStatusBadge
 import com.example.ui.components.DeepDarkCyberBackground
+import com.example.ui.components.FunPayWebAuthSheet
 import com.example.ui.screens.AutoReplyAndGreetingScreen
 import com.example.ui.screens.DashboardScreen
 import com.example.ui.screens.LotsAutoRaiseScreen
@@ -125,6 +128,7 @@ fun FPGlassMainApp(
     onUpdateKeepScreenOn: (Boolean) -> Unit = {}
 ) {
     val accounts by viewModel.accounts.collectAsStateWithLifecycle()
+    val deviceNodes by viewModel.deviceNodes.collectAsStateWithLifecycle()
     val lotCategories by viewModel.lotCategories.collectAsStateWithLifecycle()
     val autoReplyRules by viewModel.autoReplyRules.collectAsStateWithLifecycle()
     val orders by viewModel.orders.collectAsStateWithLifecycle()
@@ -135,6 +139,7 @@ fun FPGlassMainApp(
     val simulatorReplies by viewModel.chatSimulatorReplies.collectAsStateWithLifecycle()
 
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+    var webAuthUrlToOpen by remember { mutableStateOf<String?>(null) }
 
     DisposableEffect(settings.isKeepScreenAwake) {
         onUpdateKeepScreenOn(settings.isKeepScreenAwake)
@@ -151,6 +156,19 @@ fun FPGlassMainApp(
             delay(4000L)
             viewModel.dismissBanner()
         }
+    }
+
+    if (webAuthUrlToOpen != null) {
+        BackHandler { webAuthUrlToOpen = null }
+        FunPayWebAuthSheet(
+            targetUrl = webAuthUrlToOpen!!,
+            onDismiss = { webAuthUrlToOpen = null },
+            onSessionCaptured = { key, ua, username ->
+                viewModel.connectFunPayAccount(username, key, ua)
+                webAuthUrlToOpen = null
+            }
+        )
+        return
     }
 
     if (selectedTab != 0) {
@@ -220,7 +238,7 @@ fun FPGlassMainApp(
                     ) {
                         Column {
                             Text(
-                                text = "FP Cyber Helper",
+                                text = "FunPay Tools Pro",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = TextWhite
@@ -230,7 +248,7 @@ fun FPGlassMainApp(
                                 text = if (activeAcc != null) {
                                     "${activeAcc.username} • Баланс: ${activeAcc.balanceRub.toInt()} ₽"
                                 } else {
-                                    "Google Вход активен • Сессия 24/7"
+                                    "Вход FunPay / Google • Сессия 24/7"
                                 },
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontSize = 11.sp,
@@ -325,7 +343,8 @@ fun FPGlassMainApp(
                             orders = orders,
                             settings = settings,
                             isBusy = isBusy,
-                            onLoginGoogle = { name, email -> viewModel.loginWithGoogle(name, email) },
+                            onOpenFunPayWebAuth = { url -> webAuthUrlToOpen = url },
+                            onLoginGoogleFast = { name, email -> viewModel.loginWithGoogle(name, email) },
                             onConnectAccount = { user, key, ua -> viewModel.connectFunPayAccount(user, key, ua) },
                             onSwitchAccount = { viewModel.switchActiveAccount(it) },
                             onDeleteAccount = { viewModel.deleteAccount(it) },
@@ -383,6 +402,7 @@ fun FPGlassMainApp(
 
                         4 -> TelegramAndServerScreen(
                             settings = settings,
+                            deviceNodes = deviceNodes,
                             logs = logs,
                             isBusy = isBusy,
                             onSaveSettings = { viewModel.saveAutomationSettings(it) },
@@ -392,6 +412,9 @@ fun FPGlassMainApp(
                                 }
                                 viewModel.toggle24x7SessionServer(enable)
                             },
+                            onAddDeviceNode = { name, role -> viewModel.addDeviceNode(name, role) },
+                            onUpdateDeviceNode = { viewModel.updateDeviceNode(it) },
+                            onDeleteDeviceNode = { viewModel.deleteDeviceNode(it) },
                             onTestTelegram = { token, chat ->
                                 viewModel.testTelegramNotification(token, chat)
                             },

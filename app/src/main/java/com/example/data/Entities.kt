@@ -9,12 +9,37 @@ data class FunPayAccountEntity(
     val username: String,
     val userId: String,
     val goldenKey: String,
-    val userAgent: String = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    val userAgent: String = "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 Chrome/131.0.0.0 Mobile Safari/537.36",
     val csrfToken: String = "",
     val balanceRub: Double = 0.0,
     val activeOrdersCount: Int = 0,
     val isActive: Boolean = true,
-    val lastSyncTime: Long = System.currentTimeMillis()
+    val lastSyncTime: Long = System.currentTimeMillis(),
+    val isGoogleLinked: Boolean = false,
+    val email: String = ""
+)
+
+/**
+ * Dedicated automated device node session (e.g. Old Phone 1, Old Phone 2)
+ * with individual granular tasks toggled per device without arbitrary tool limits.
+ */
+@Entity(tableName = "device_nodes")
+data class DeviceNodeSessionEntity(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val deviceName: String, // e.g. "Старый девайс Xiaomi (Кухня)"
+    val deviceRole: String = "24/7 Сервер-Агент",
+    val isSessionActive: Boolean = true,
+    // Granular customizable tasks without limits:
+    val taskAutoRaiseLots: Boolean = true,
+    val taskAutoReplyChat: Boolean = true,
+    val taskAutoGreeting: Boolean = true,
+    val taskAutoReviews: Boolean = true,
+    val taskAutoTpTickets: Boolean = true,
+    val taskTelegramReports: Boolean = true,
+    val pingIntervalSeconds: Int = 30,
+    val lastHeartbeatTimestamp: Long = System.currentTimeMillis(),
+    val batteryPct: Int = 98,
+    val isPluggedIn: Boolean = true
 )
 
 @Entity(tableName = "lot_categories")
@@ -63,7 +88,8 @@ data class FunPayOrderEntity(
 @Entity(tableName = "automation_settings")
 data class AutomationSettingsEntity(
     @PrimaryKey val id: Int = 1,
-    // Global modules
+    // Global modules - UNLIMITED MODE (No restrictions/limits)
+    val isUnlimitedModeActive: Boolean = true,
     val isSessionLoopRunning: Boolean = false,
     val isAutoRaiseMasterEnabled: Boolean = true,
     val isEternalOnlineEnabled: Boolean = true,
@@ -103,7 +129,7 @@ data class AutomationSettingsEntity(
 data class SessionLogEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val timestamp: Long = System.currentTimeMillis(),
-    val category: String, // "RAISE", "CHAT", "REVIEW", "TICKET_TP", "TELEGRAM", "ACCOUNT", "SERVER"
+    val category: String, // "RAISE", "CHAT", "REVIEW", "TICKET_TP", "TELEGRAM", "ACCOUNT", "SERVER", "WEBVIEW"
     val title: String,
     val details: String,
     val isSuccess: Boolean = true

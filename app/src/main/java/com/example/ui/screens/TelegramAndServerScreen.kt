@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,12 +21,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.Brightness2
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.Button
@@ -55,16 +59,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.AutomationSettingsEntity
+import com.example.data.DeviceNodeSessionEntity
 import com.example.data.SessionLogEntity
 import com.example.ui.components.DarkNeonGlassCard
 import com.example.ui.components.DarkNeonStatusBadge
-import com.example.ui.theme.DarkBackground
 import com.example.ui.theme.DarkBorder
 import com.example.ui.theme.JetBrainsMonoFontFamily
 import com.example.ui.theme.NeonAmber
 import com.example.ui.theme.NeonCoral
 import com.example.ui.theme.NeonCyan
 import com.example.ui.theme.NeonEmerald
+import com.example.ui.theme.TextCyan
 import com.example.ui.theme.TextDim
 import com.example.ui.theme.TextLight
 import com.example.ui.theme.TextWhite
@@ -75,16 +80,24 @@ import java.util.Locale
 @Composable
 fun TelegramAndServerScreen(
     settings: AutomationSettingsEntity,
+    deviceNodes: List<DeviceNodeSessionEntity>,
     logs: List<SessionLogEntity>,
     isBusy: Boolean,
     onSaveSettings: (AutomationSettingsEntity) -> Unit,
     onToggleSession24x7: (Boolean) -> Unit,
+    onAddDeviceNode: (name: String, role: String) -> Unit,
+    onUpdateDeviceNode: (DeviceNodeSessionEntity) -> Unit,
+    onDeleteDeviceNode: (DeviceNodeSessionEntity) -> Unit,
     onTestTelegram: (String, String) -> Unit,
     onClearLogs: () -> Unit
 ) {
     var botTokenInput by remember(settings.telegramBotToken) { mutableStateOf(settings.telegramBotToken) }
     var chatIdInput by remember(settings.telegramChatId) { mutableStateOf(settings.telegramChatId) }
     var showOledFullscreenOverlay by remember { mutableStateOf(false) }
+
+    var showAddDeviceDialog by remember { mutableStateOf(false) }
+    var newDeviceName by remember { mutableStateOf("") }
+    var newDeviceRole by remember { mutableStateOf("") }
 
     val logTimeFormat = remember { SimpleDateFormat("HH:mm:ss", Locale.getDefault()) }
 
@@ -119,7 +132,7 @@ fun TelegramAndServerScreen(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        // 1. 24/7 Old Device Server Card
+        // 1. Dedicated Old Device 24/7 Server Master Card
         item {
             DarkNeonGlassCard(elevated = true, accentBorderColor = NeonEmerald) {
                 Row(
@@ -131,10 +144,14 @@ fun TelegramAndServerScreen(
                         Icon(imageVector = Icons.Default.Devices, contentDescription = null, tint = NeonCyan, modifier = Modifier.size(24.dp))
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
-                            DarkNeonStatusBadge(text = "РЕЖИМ СЕРВЕРА 24/7 (СТАРЫЙ ДЕВАЙС)", color = NeonEmerald)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                DarkNeonStatusBadge(text = "РЕЖИМ СЕРВЕРА 24/7 (СТАРЫЙ ДЕВАЙС)", color = NeonEmerald)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                DarkNeonStatusBadge(text = "БЕЗ ЛИМИТОВ", color = NeonCyan)
+                            }
                             Spacer(modifier = Modifier.height(2.dp))
-                            Text(text = "Круглосуточная сессия", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextWhite)
-                            Text(text = "Положите старый телефон на зарядку — он держит онлайн 24/7", style = MaterialTheme.typography.bodyMedium, fontSize = 12.sp, color = TextLight)
+                            Text(text = "Круглосуточный фоновый сервер", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextWhite)
+                            Text(text = "Старый девайс на зарядке поднимает лоты, отвечает в чате и пишет в ТП", style = MaterialTheme.typography.bodyMedium, fontSize = 12.sp, color = TextLight)
                         }
                     }
                 }
@@ -181,7 +198,157 @@ fun TelegramAndServerScreen(
             }
         }
 
-        // 2. Telegram Integration Card
+        // 2. Multi-Device Sessions Manager (Custom task assignment per device without limits)
+        item {
+            DarkNeonGlassCard {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Сессии и Устройства (${deviceNodes.size})",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = TextWhite
+                        )
+                        Text(
+                            text = "Настройте, какие задачи выполняет это устройство",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontSize = 12.sp,
+                            color = TextLight
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = { showAddDeviceDialog = !showAddDeviceDialog },
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, NeonCyan)
+                    ) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = NeonCyan, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Девайс", color = NeonCyan, fontSize = 12.sp)
+                    }
+                }
+
+                AnimatedVisibility(visible = showAddDeviceDialog) {
+                    Column(modifier = Modifier.fillMaxWidth().padding(top = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = newDeviceName,
+                            onValueChange = { newDeviceName = it },
+                            label = { Text("Название (напр.: Старый Samsung A50)") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextWhite, unfocusedTextColor = TextWhite)
+                        )
+                        OutlinedTextField(
+                            value = newDeviceRole,
+                            onValueChange = { newDeviceRole = it },
+                            label = { Text("Роль (напр.: Поднятие лотов 24/7)") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextWhite, unfocusedTextColor = TextWhite)
+                        )
+                        Button(
+                            onClick = {
+                                if (newDeviceName.isNotBlank()) {
+                                    onAddDeviceNode(newDeviceName, newDeviceRole)
+                                    newDeviceName = ""
+                                    newDeviceRole = ""
+                                    showAddDeviceDialog = false
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = NeonCyan, contentColor = Color.Black)
+                        ) {
+                            Text("Добавить устройство", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+
+        // Device Nodes Items with granular tasks toggles
+        items(deviceNodes, key = { it.id }) { node ->
+            DarkNeonGlassCard(accentBorderColor = if (node.isSessionActive) NeonCyan else null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(imageVector = Icons.Default.Devices, contentDescription = null, tint = NeonCyan, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(text = node.deviceName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextWhite)
+                        }
+                        Text(text = node.deviceRole, style = MaterialTheme.typography.bodyMedium, fontSize = 12.sp, color = TextLight)
+                    }
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Switch(
+                            checked = node.isSessionActive,
+                            onCheckedChange = { onUpdateDeviceNode(node.copy(isSessionActive = it)) },
+                            colors = SwitchDefaults.colors(checkedThumbColor = Color.Black, checkedTrackColor = NeonEmerald)
+                        )
+                        IconButton(onClick = { onDeleteDeviceNode(node) }) {
+                            Icon(imageVector = Icons.Default.DeleteOutline, contentDescription = null, tint = NeonCoral)
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Задачи этого устройства (без лимитов):",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextCyan
+                )
+
+                // Granular Tasks Checkboxes for this device
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                        Checkbox(
+                            checked = node.taskAutoRaiseLots,
+                            onCheckedChange = { onUpdateDeviceNode(node.copy(taskAutoRaiseLots = it)) },
+                            colors = CheckboxDefaults.colors(checkedColor = NeonCyan)
+                        )
+                        Text(text = "Подъем лотов", fontSize = 12.sp, color = TextLight)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                        Checkbox(
+                            checked = node.taskAutoReplyChat,
+                            onCheckedChange = { onUpdateDeviceNode(node.copy(taskAutoReplyChat = it)) },
+                            colors = CheckboxDefaults.colors(checkedColor = NeonCyan)
+                        )
+                        Text(text = "Автоответчик", fontSize = 12.sp, color = TextLight)
+                    }
+                }
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                        Checkbox(
+                            checked = node.taskAutoTpTickets,
+                            onCheckedChange = { onUpdateDeviceNode(node.copy(taskAutoTpTickets = it)) },
+                            colors = CheckboxDefaults.colors(checkedColor = NeonAmber)
+                        )
+                        Text(text = "Тикеты в ТП (>24ч)", fontSize = 12.sp, color = TextLight)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                        Checkbox(
+                            checked = node.taskAutoReviews,
+                            onCheckedChange = { onUpdateDeviceNode(node.copy(taskAutoReviews = it)) },
+                            colors = CheckboxDefaults.colors(checkedColor = NeonEmerald)
+                        )
+                        Text(text = "Отзывы", fontSize = 12.sp, color = TextLight)
+                    }
+                }
+            }
+        }
+
+        // 3. Telegram Integration Card
         item {
             DarkNeonGlassCard(accentBorderColor = NeonCyan) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -245,7 +412,7 @@ fun TelegramAndServerScreen(
             }
         }
 
-        // 3. Live Logs
+        // 4. Live Logs
         item {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text(text = "Журнал сессии (${logs.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextWhite)
